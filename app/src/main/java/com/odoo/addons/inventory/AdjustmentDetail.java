@@ -62,11 +62,6 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
         } else {
             int rowId = extras.getInt(OColumn.ROW_ID);
             record = stockInventory.browse(rowId);
-
-            System.out.println(" 111 rowId " + rowId + "\n+___rw " );
-            System.out.println(" 111 record " + record + "+___rw " );
-            System.out.println(" 111 nbnme " + record.getString("name"));
-
             checkControls();
 
 //            setMode(mEditMode);
