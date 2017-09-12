@@ -13,58 +13,84 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
+        <android.support.design.widget.AppBarLayout
+            android:id="@+id/detail_appbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:layout_collapseMode="pin"
-            app:popupTheme="@style/AppBar.Dark" />
+            android:layout_height="150dp"
+            android:fitsSystemWindows="true"
+            android:theme="@style/AppBar.Dark">
+
+            <android.support.design.widget.CollapsingToolbarLayout
+                android:id="@+id/collapsing_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fitsSystemWindows="true"
+                app:contentScrim="?attr/colorPrimary"
+                app:expandedTitleMarginEnd="12dp"
+                app:expandedTitleMarginStart="16dp"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="@drawable/scrim_top"
+                    app:layout_collapseMode="pin" />
+
+                <android.support.v7.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    app:layout_collapseMode="pin"
+                    app:popupTheme="@style/AppBar.Dark" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="88dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/scrim_bottom" />
+            </android.support.design.widget.CollapsingToolbarLayout>
+        </android.support.design.widget.AppBarLayout>
 
         <odoo.controls.OForm
             android:id="@+id/inventoryForm"
+            app:modelName="stock.inventory"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:modelName="stock.inventory">
+            android:layout_height="wrap_content">
 
             <odoo.controls.OField
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:fieldName="invntory"
-                app:fieldTextAppearance="?android:textAppearanceMedium"
-                app:showLabel="false"></odoo.controls.OField>
-
-            <odoo.controls.OField
-                android:id="@+id/name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:fieldLabelColor="@color/theme_secondary"
-                app:fieldName="name"
-                app:fieldTextAppearance="?android:textAppearanceMedium"
-                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
-
-
-            <odoo.controls.OField
-                android:id="@+id/filter"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:fieldLabelColor="@color/theme_secondary"
                 app:fieldName="filter"
-                app:fieldTextAppearance="?android:textAppearanceMedium"
-                app:iconResource="@drawable/ic_action_message"></odoo.controls.OField>
+                app:fieldType="Selection"
+                app:widgetType="SelectionDialog"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
+            </odoo.controls.OField>
+
+            <odoo.controls.OField
+                app:fieldName="exhausted"
+                app:fieldType="Boolean"
+                app:widgetType="RadioGroup"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
+            </odoo.controls.OField>
+
+            <odoo.controls.OField
+                app:fieldName="date"
+                app:fieldType="DateTime"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
+            </odoo.controls.OField>
+
+            <odoo.controls.OField
+                app:fieldName="company"
+                app:fieldType="ManyToOne"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
+            </odoo.controls.OField>
 
             <View
                 style="@style/ViewSeparator"
-                android:layout_marginLeft="72dp" />
-
-            <odoo.controls.OField
-                android:id="@+id/date"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:fieldLabelColor="@color/theme_secondary"
-                app:fieldName="date"
-                app:fieldTextAppearance="?android:textAppearanceMedium"
-                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+                android:layout_margin="50dp" />
 
         </odoo.controls.OForm>
     </LinearLayout>

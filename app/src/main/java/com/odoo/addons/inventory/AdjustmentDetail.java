@@ -33,11 +33,15 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.inventory_adjustment_detail);
-
+        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
+        mForm = (OForm) findViewById(R.id.inventoryForm);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+//
+//        if (toolbar != null)
+//            toolbar.setTitle("");
 
         app = (App) getApplicationContext();
         stockInventory = new StockInventory(this, null);
@@ -52,8 +56,6 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
     }
 
     private void setupToolbar() {
-        System.out.println(" 111 my 1" + extras);
-        mForm = (OForm) findViewById(R.id.inventoryForm);
 
         if (!hasRecordInExtra()) {
 //            setMode(mEditMode);
@@ -65,19 +67,23 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
             checkControls();
 
 //            setMode(mEditMode);
-            mForm.setEditable(mEditMode);
+            System.out.println("\n ___________"  + record);
+            mForm.setEditable(true);
             mForm.initForm(record);
-            toolbar.setTitle(record.getString("name"));
 
+
+//            OControls.setText(view, R.id.company, row.getString("company"));
+            collapsingToolbarLayout.setTitle(record.getString("name"));
         }
     }
 
     private void checkControls() {
-        System.out.println(" 111 checkControls ");
-
-        findViewById(R.id.name).setOnClickListener(this);
-        findViewById(R.id.filter).setOnClickListener(this);
-        findViewById(R.id.date).setOnClickListener(this);
+//        findViewById(R.id.name).setOnClickListener(this);
+//        findViewById(R.id.filter).setOnClickListener(this);
+//        findViewById(R.id.exhausted).setOnClickListener(this);
+//        findViewById(R.id.date).setOnClickListener(this);
+//        findViewById(R.id.company).setOnClickListener(this);
+//        findViewById(R.id.stockInventoryLine).setOnClickListener(this);
     }
 
     @Override
