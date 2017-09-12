@@ -65,6 +65,8 @@ public class Adjustments extends BaseFragment
     @Override
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
+        setHasSyncStatusObserver(null, this, db());
         return inflater.inflate(R.layout.common_listview, container, false);
     }
 

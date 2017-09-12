@@ -36,6 +36,8 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         app = (App) getApplicationContext();
         stockInventory = new StockInventory(this, null);
@@ -55,8 +57,6 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
 
         if (!hasRecordInExtra()) {
 //            setMode(mEditMode);
-//            userImage.setColorFilter(Color.parseColor("#ffffff"));
-//            userImage.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             mForm.setEditable(mEditMode);
             mForm.initForm(null);
         } else {
@@ -67,7 +67,7 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
 //            setMode(mEditMode);
             mForm.setEditable(mEditMode);
             mForm.initForm(record);
-//            collapsingToolbarLayout.setTitle(record.getString("name"));
+            toolbar.setTitle(record.getString("name"));
 
         }
     }
