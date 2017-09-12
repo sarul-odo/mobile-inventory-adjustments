@@ -102,6 +102,28 @@
         <activity
             android:name="com.odoo.addons.customers.CustomerDetails"
             android:windowSoftInputMode="adjustPan" />
+
+        <service android:name=".addons.inventory.services.StockInventorySyncService"
+            android:exported="true"
+            android:process=":sync_inventory">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/inventory_sync_adapter" />
+        </service>
+        <provider
+            android:name="com.odoo.addons.inventory.providers.StockInventoryProvider"
+            android:authorities="com.odoo.addons.inventory.models.stock_inventory"
+            android:label="Stock Inventory"
+            android:multiprocess="true" />
+
+        <activity
+            android:name="com.odoo.addons.inventory.AdjustmentDetail"
+            android:windowSoftInputMode="adjustPan" />
+
     </application>
 
 </manifest>
