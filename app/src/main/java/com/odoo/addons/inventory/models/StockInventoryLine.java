@@ -16,6 +16,7 @@ class StockInventoryLine  extends OModel {
     public static final String TAG = StockInventory.class.getSimpleName();
 
     OColumn name = new OColumn("Name", OVarchar.class).setSize(100);
+    OColumn inventory = new OColumn("Inventory", StockInventory.class, OColumn.RelationType.ManyToOne);
 
     public StockInventoryLine(Context context, OUser user){
         super(context, "stock.inventory.line", user);

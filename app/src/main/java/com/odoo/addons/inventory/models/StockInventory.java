@@ -22,7 +22,6 @@ public class StockInventory extends OModel{
     public static final String AUTHORITY = "com.odoo.addons.inventory.models.stock_inventory";
 
     OColumn name = new OColumn("Name", OVarchar.class).setSize(100);
-//    OColumn filter = new OColumn("Filter", OSelection.class);
     OColumn filter = new OColumn("Filter", OSelection.class).addSelection("none", "All products")
                                                             .addSelection("category", "One product category")
                                                             .addSelection("product", "One product only")
@@ -30,8 +29,7 @@ public class StockInventory extends OModel{
     OColumn exhausted = new OColumn("Exhausted", OBoolean.class);
     OColumn date = new OColumn("Date", ODateTime.class);
     OColumn company = new OColumn("Company", ResCompany.class, OColumn.RelationType.ManyToOne);
-    OColumn line = new OColumn("Line", StockInventoryLine.class, OColumn.RelationType.OneToMany);
-
+    OColumn inventoryline = new OColumn("Inventory line", StockInventoryLine.class, OColumn.RelationType.OneToMany).setRelatedColumn("inventory");
 
     public StockInventory(Context context, OUser user) {
         super(context, "stock.inventory", user);
