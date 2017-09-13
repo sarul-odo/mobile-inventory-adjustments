@@ -60,30 +60,24 @@
 
             <odoo.controls.OField
                 app:fieldName="filter"
-                app:fieldType="Selection"
-                app:widgetType="SelectionDialog"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent">
             </odoo.controls.OField>
 
             <odoo.controls.OField
                 app:fieldName="exhausted"
-                app:fieldType="Boolean"
-                app:widgetType="RadioGroup"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent">
             </odoo.controls.OField>
 
             <odoo.controls.OField
                 app:fieldName="date"
-                app:fieldType="DateTime"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent">
             </odoo.controls.OField>
 
             <odoo.controls.OField
                 app:fieldName="company"
-                app:fieldType="ManyToOne"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent">
             </odoo.controls.OField>
@@ -91,6 +85,12 @@
             <View
                 style="@style/ViewSeparator"
                 android:layout_margin="50dp" />
+
+            <!--<odoo.controls.OField-->
+                <!--app:fieldName="inventoryline"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_width="match_parent">-->
+            <!--</odoo.controls.OField>-->
 
         </odoo.controls.OForm>
     </LinearLayout>
