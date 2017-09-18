@@ -89,7 +89,7 @@ public class Adjustments extends BaseFragment
     @Override
     public void onViewBind(View view, Cursor cursor, ODataRow row) {
         OControls.setText(view, R.id.name, row.getString("name"));
-        OControls.setText(view, R.id.info, row.getString("filter") + " " + row.getString("company"));
+        OControls.setText(view, R.id.info, row.getString("filter") + " " + row.getString("company_id"));
     }
 
     @Override
