@@ -15,7 +15,6 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.odoo.App;
 import com.odoo.R;
 import com.odoo.addons.inventory.models.StockInventory;
-import com.odoo.addons.inventory.models.StockInventoryLine;
 import com.odoo.core.orm.ODataRow;
 import com.odoo.core.orm.fields.OColumn;
 import com.odoo.core.rpc.Odoo;
@@ -49,7 +48,6 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
     private ODataRow recordStockInventory = null;
     private List<ODataRow> recordStockInventoryLine = null;
     private StockInventory stockInventory;
-    private StockInventoryLine stockInventoryLine;
     private CollapsingToolbarLayout collapsingToolbarLayout;
     private ExpandableListControl mList;
     private ExpandableListControl.ExpandableListAdapter mAdapter;

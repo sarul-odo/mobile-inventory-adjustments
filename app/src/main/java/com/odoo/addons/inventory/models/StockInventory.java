@@ -29,7 +29,7 @@ public class StockInventory extends OModel{
     OColumn exhausted = new OColumn("Exhausted", OBoolean.class);
     OColumn date = new OColumn("Date", ODateTime.class);
     OColumn company_id = new OColumn("Company", ResCompany.class, OColumn.RelationType.ManyToOne);
-    OColumn line_ids = new OColumn("Inventory line", StockInventoryLine.class, OColumn.RelationType.OneToMany).setRelatedColumn("inventory_id");
+//    OColumn line_ids = new OColumn("Inventory line", StockInventoryLine.class, OColumn.RelationType.OneToMany).setRelatedColumn("inventory_id");
 
     public StockInventory(Context context, OUser user) {
         super(context, "stock.inventory", user);
