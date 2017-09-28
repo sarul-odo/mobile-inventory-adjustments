@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 
 import com.odoo.addons.inventory.models.StockInventory;
+import com.odoo.core.rpc.helper.ODomain;
 import com.odoo.core.service.OSyncAdapter;
 import com.odoo.core.service.OSyncService;
 import com.odoo.core.support.OUser;
@@ -23,6 +24,9 @@ public class StockInventorySyncService extends OSyncService{
 
     @Override
     public void performDataSync(OSyncAdapter adapter, Bundle extras, OUser user) {
+        ODomain domain = new ODomain();
+        domain.add("state","=","draft");
         adapter.syncDataLimit(80);
     }
+
 }

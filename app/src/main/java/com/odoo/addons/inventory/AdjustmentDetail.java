@@ -1,9 +1,11 @@
 package com.odoo.addons.inventory;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -15,11 +17,18 @@ import com.odoo.addons.inventory.models.StockInventory;
 import com.odoo.addons.inventory.models.StockInventoryLine;
 import com.odoo.core.orm.ODataRow;
 import com.odoo.core.orm.fields.OColumn;
+import com.odoo.core.rpc.Odoo;
+import com.odoo.core.rpc.helper.OArguments;
+import com.odoo.core.rpc.helper.utils.gson.OdooResult;
 import com.odoo.core.support.OdooCompatActivity;
 import com.odoo.core.utils.OControls;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import odoo.controls.ExpandableListControl;
 import odoo.controls.OForm;
@@ -47,6 +56,10 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
     private ExpandableListControl mList;
     private ExpandableListControl.ExpandableListAdapter mAdapter;
     private List<Object> objects = new ArrayList<Object>();
+    private OdooMobile odooMobile;
+    private List<Integer> prdIds = new ArrayList<Integer>();
+    private GetProductFromServer getProductFromServer;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,6 +69,7 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
         mForm = (OForm) findViewById(R.id.inventoryForm);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 //        if (toolbar != null)
@@ -63,8 +77,9 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
         app = (App) getApplicationContext();
         stockInventory = new StockInventory(this, null);
         stockInventoryLine = new StockInventoryLine(this, null);
-        productProduct = new ProductProduct(this, null);
-        productTemplate = new ProductTemplate(this, null);
+        odooMobile = new OdooMobile(this, null);
+//        productProduct = new ProductProduct(this, null);
+//        productTemplate = new ProductTemplate(this, null);
 
         extras = getIntent().getExtras();
 //        if (hasRecordInExtra())
@@ -89,6 +104,9 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
             checkControls();
 //            setMode(mEditMode);
             mForm.setEditable(true);
+            System.out.println(" ___ record ___ " + record);
+            System.out.println(" ___ recordLINE ___ " + recordLine);
+
             initAdapter();
             mForm.initForm(record);
 //            OControls.setText(view, R.id.company, row.getString("company"));
@@ -107,41 +125,66 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
 
     @Override
     public void onClick(View v) {
-
+        Log.d(TAG, "------------------------ CLICK -------------------------");
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
     private void initAdapter() {
+//        getDatasFromServer();
+//        LiveSearchProduct liveSearchProduct = new LiveSearchProduct();
+//        liveSearchProduct.execute();
         try {
             mList = (ExpandableListControl) findViewById(R.id.line_ids);
 //            mList.setVisibility(View.VISIBLE);
             if (extras != null && record != null) {
+//                int[] prdIds = new int[3];
+//                int[] myIntArray = {};
+//                int[] myIntArray = new int[]{1,2,3};
+
+                AtomicIntegerArray prdId;
 //                List<ODataRow> lines = stockInventoryLine.select(null, "inventory = ?", new String[]{String.valueOf(record.getInt("id"))});
                 if (recordLine.size() > 0) {
                     for (ODataRow line : recordLine) {
-                        System.out.println(" ___ TEST 001 ___" + line +"///"+ line.getInt("product_id"));
-
-                        productPrd = productProduct.browse(line.getInt("product_id"));
-                        System.out.println(" ___ TEST 002 ___" + productPrd +"///"+ productPrd.getInt("product_tmpl_id"));
-                        productTmpl = productTemplate.browse(productPrd.getInt("product_tmpl_id"));
-                        System.out.println(" ___ TEST 003 ___" + productTmpl);
-//                        if (productTmpl.size() > 0) {
-//                            line.put("productName", line.getString("name"));
+                        ODataRow m2o = line.getM2ORecord("product_id").browse();
+                        prdIds.add(line.getInt("product_id"));
+//                        odooMobile = new OdooMobile(this, null);
+//                        getDatasFromServer();
+//                        if (prdId != 0) {
+                        System.out.println(" ___ TEST 000 ___" + "\n --- /// " + line);
+                        System.out.println(" ___ TEST 001 ___" + "\n --- /// " + m2o);
+                        line.put("productName", m2o.getString("name"));
 //                            lineIds.put(product + "", line.getInt("id"));
+                        System.out.println(" ___ TEST 002 ___" + "\n --- /// " + line);
+
 //                        }
                     }
+                    if (prdIds.size() > 0) {
+                        GetProductFromServer getProductFromServer = new GetProductFromServer();
+                        getProductFromServer.execute();
+                    }
+                    System.out.println(" ___ INT IDS ___" + "\n --- /// " + prdIds + prdIds.size());
                     objects.addAll(recordLine);
                 }
             }
             mAdapter = mList.getAdapter(R.layout.stock_inventory_line_list, objects,
                     new ExpandableListControl.ExpandableListAdapterGetViewListener() {
+
                         @Override
                         public View getView(int position, View mView, ViewGroup parent) {
                             ODataRow row = (ODataRow) mAdapter.getItem(position);
 
-                            System.out.println(" ___ TEST 222 ___" + row);
-
                             Log.d(TAG, "row : " + row);
-                            OControls.setText(mView, R.id.edtName, row.getString("name"));
+                            OControls.setText(mView, R.id.edtName, row.getString("productName"));
                             OControls.setText(mView, R.id.productId, row.getString("product_id"));
                             OControls.setText(mView, R.id.thoereticalQty, String.format("%.2f", row.getFloat("theoretical_qty")));
                             OControls.setText(mView, R.id.productQty, String.format("%.2f", row.getFloat("product_qty")));
@@ -150,10 +193,49 @@ public class AdjustmentDetail extends OdooCompatActivity implements View.OnClick
                         }
                     });
             mAdapter.notifyDataSetChanged(objects);
-            System.out.println(" ______ SYS ______" + objects);
+//            System.out.println(" ______ SYS ______" + objects);
         } catch (Exception ex) {
 //            showError(this, R.string.str_error + ex.toString());
             Log.e(TAG, "ERROR", ex);
         }
     }
+
+
+    private class GetProductFromServer extends AsyncTask<ODataRow, Void, Void> {
+        protected void onPreExecute() {
+            super.onPreExecute();
+//            ActionInProgress(true);
+        }
+
+        @Override
+        protected Void doInBackground(ODataRow... params) {
+            Odoo odoo;
+            try {
+                odoo = odooMobile.getServerDataHelper().getOdoo();
+                Log.d(TAG, " ODOO :" + odoo + prdIds);
+                if (odoo != null) {
+                    OArguments args = new OArguments();
+                    args.add(new JSONObject());
+                    args.add(new JSONArray(prdIds));
+                    OdooResult result = odoo.callMethod(odooMobile.getModelName(), "getProduct", args, null);
+                    Log.d(TAG, " RESULT :" + result);
+                } else {
+//                    Toast.makeText(this, "HOlbogdoj chadahgui bnAP KOI", Toast.LENGTH_LONG).show();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+        }
+    }
+
 }
+
+//ServerDataHelper helper = getServerDataHelper();
+//OArguments oArguments = new OArguments();
+//oArguments.add(new JSONArray().put(2));
+//Object billno = helper.callMethod("get_order_no", oArguments);

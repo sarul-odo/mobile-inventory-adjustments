@@ -124,6 +124,8 @@
             android:name="com.odoo.addons.inventory.AdjustmentDetail"
             android:windowSoftInputMode="adjustPan" />
 
+
+
     </application>
 
 </manifest>

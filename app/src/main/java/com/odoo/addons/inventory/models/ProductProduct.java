@@ -13,14 +13,15 @@ import com.odoo.core.support.OUser;
 
 public class ProductProduct  extends OModel {
 
-//    public static final String TAG = StockInventory.class.getSimpleName();
-//
-//    OColumn name = new OColumn("Name", OVarchar.class);
+    public static final String TAG = StockInventory.class.getSimpleName();
+
+    OColumn name = new OColumn("Name", OVarchar.class);
     OColumn barcode = new OColumn("Barcode", OVarchar.class).setSize(13);
     OColumn product_tmpl_id = new OColumn("Product template", ProductTemplate.class, OColumn.RelationType.ManyToOne);
 
     public ProductProduct(Context context, OUser user){
         super(context, "product.product", user);
+        setDefaultNameColumn("name");
     }
 
 //    public int selectServer(int server_id) {
