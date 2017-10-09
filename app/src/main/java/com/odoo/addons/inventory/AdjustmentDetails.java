@@ -57,6 +57,7 @@ public class AdjustmentDetails extends OdooCompatActivity
     private CollapsingToolbarLayout collapsingToolbarLayout;
     private Toolbar toolbar;
     private Context mContext;
+    private OnStockInventoryChangeUpdate onStockInventoryChangeUpdate;
 //    private Adjustments.Type partnerType = Adjustments.Type.Customer;
 
     @Override
@@ -206,8 +207,8 @@ public class AdjustmentDetails extends OdooCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        final OnStockInventoryChangeUpdate onStockInventoryChangeUpdate = new OnStockInventoryChangeUpdate();
-        final ODomain domain = new ODomain();
+        onStockInventoryChangeUpdate = new OnStockInventoryChangeUpdate();
+        ODomain domain = new ODomain();
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
@@ -258,7 +259,6 @@ public class AdjustmentDetails extends OdooCompatActivity
                                 if (type == OAlert.ConfirmType.POSITIVE) {
                                     // Deleting record and finishing activity if success.
                                     if (stockInventory.delete(record.getInt(OColumn.ROW_ID))) {
-                                        onStockInventoryChangeUpdate.execute(domain);
                                         Toast.makeText(AdjustmentDetails.this, R.string.toast_record_deleted,
                                                 Toast.LENGTH_SHORT).show();
                                         finish();
