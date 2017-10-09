@@ -78,6 +78,7 @@ public class Customers extends BaseFragment implements ISyncStatusObserverListen
         setHasOptionsMenu(true);
         setHasSyncStatusObserver(KEY, this, db());
         return inflater.inflate(R.layout.common_listview, container, false);
+
     }
 
     @Override
