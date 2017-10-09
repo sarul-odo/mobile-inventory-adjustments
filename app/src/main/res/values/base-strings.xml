@@ -53,6 +53,7 @@
     <string name="title_confirm">Confirm</string>
     <string name="title_working">Working&#8230;</string>
     <string name="title_please_wait">Please wait&#8230;</string>
+    <string name="title_please_wait_mn">Түр хүлээнэ үү...&#8230;</string>
     <string name="label_ok">OK</string>
     <string name="label_search">Search</string>
     <string name="label_delete">Delete</string>
