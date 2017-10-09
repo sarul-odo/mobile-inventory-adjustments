@@ -105,14 +105,14 @@
 
         <service android:name=".addons.inventory.services.StockInventorySyncService"
             android:exported="true"
-            android:process=":sync_inventory">
+            android:process=":sync_stock_inventory">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
 
             <meta-data
                 android:name="android.content.SyncAdapter"
-                android:resource="@xml/inventory_sync_adapter" />
+                android:resource="@xml/stock_inventory_sync_adapter" />
         </service>
         <provider
             android:name="com.odoo.addons.inventory.providers.StockInventoryProvider"
@@ -121,7 +121,7 @@
             android:multiprocess="true" />
 
         <activity
-            android:name="com.odoo.addons.inventory.AdjustmentDetail"
+            android:name="com.odoo.addons.inventory.AdjustmentDetails"
             android:windowSoftInputMode="adjustPan" />
 
 

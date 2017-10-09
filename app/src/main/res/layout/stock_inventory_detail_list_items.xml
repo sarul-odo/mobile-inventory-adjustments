@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff"
+    android:orientation="vertical">
+
+    <!--View Layout-->
+    <LinearLayout
+        android:id="@+id/stock_inventory_view_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <odoo.controls.OForm
+            android:id="@+id/stockInventoryForm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:modelName="stock.inventory">
+
+            <odoo.controls.OField
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:fieldLabelColor="@color/theme_secondary"
+                app:fieldName="name"
+                app:fieldTextAppearance="?android:textAppearanceMedium"
+                app:showLabel="true"
+                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+
+            <odoo.controls.OField
+                android:id="@+id/location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:fieldLabelColor="@color/theme_secondary"
+                app:fieldName="location_id"
+                app:fieldTextAppearance="?android:textAppearanceMedium"
+                app:showLabel="true"
+                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+
+            <odoo.controls.OField
+                android:id="@+id/filter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:fieldLabelColor="@color/theme_secondary"
+                app:fieldName="filter"
+                app:fieldTextAppearance="?android:textAppearanceMedium"
+                app:showLabel="true"
+                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+
+            <odoo.controls.OField
+                android:id="@+id/exhausted"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:fieldLabelColor="@color/theme_secondary"
+                app:fieldName="exhausted"
+                app:fieldTextAppearance="?android:textAppearanceMedium"
+                app:showLabel="true"
+                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+
+            <odoo.controls.OField
+                android:id="@+id/date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:fieldLabelColor="@color/theme_secondary"
+                app:fieldName="date"
+                app:fieldTextAppearance="?android:textAppearanceMedium"
+                app:showLabel="true"
+                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+
+            <odoo.controls.OField
+                android:id="@+id/company"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:fieldLabelColor="@color/theme_secondary"
+                app:fieldName="company_id"
+                app:fieldTextAppearance="?android:textAppearanceMedium"
+                app:showLabel="true"
+                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+
+            <View
+                style="@style/ViewSeparator"
+                android:layout_marginLeft="72dp" />
+
+        </odoo.controls.OForm>
+
+    </LinearLayout>
+    <!--Edit Layout-->
+    <LinearLayout
+        android:id="@+id/stock_inventory_edit_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:paddingTop="@dimen/statusBarHeight"
+        android:visibility="gone">
+
+        <odoo.controls.OForm
+            android:id="@+id/stockInventoryFormEdit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#ffffff"
+            android:orientation="vertical"
+            app:modelName="stock.inventory">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/parallax_view_edit"
+                android:orientation="vertical">
+
+                <odoo.controls.OField
+                    android:id="@android:id/title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="@dimen/default_8dp"
+                    app:fieldLabelColor="@color/theme_secondary"
+                    app:fieldName="name"
+                    app:fieldTextAppearance="?android:textAppearanceLarge"
+                    app:showIcon="true"
+                    app:iconResource="@drawable/ic_action_message">
+                </odoo.controls.OField>
+
+                <View style="@style/ViewSeparator" />
+
+                <odoo.controls.OField
+                    android:id="@+id/state_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:fieldName="state"
+                    app:fieldTextAppearance="?android:textAppearanceMedium">
+                </odoo.controls.OField>
+
+                <odoo.controls.OField
+                    android:id="@+id/location_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:fieldName="location_id"
+                    app:fieldTextAppearance="?android:textAppearanceMedium">
+                </odoo.controls.OField>
+
+                <odoo.controls.OField
+                    android:id="@+id/filter_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:fieldName="filter">
+                </odoo.controls.OField>
+
+                <View
+                    style="@style/ViewSeparator"
+                    android:layout_marginLeft="72dp" />
+
+                <odoo.controls.OField
+                    android:id="@+id/exhausted_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:fieldName="exhausted"
+                    app:showLabel="false">
+                </odoo.controls.OField>
+
+                <View
+                    style="@style/ViewSeparator"
+                    android:layout_marginLeft="72dp" />
+
+                <odoo.controls.OField
+                    android:id="@+id/date_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:fieldName="date">
+                </odoo.controls.OField>
+
+                <odoo.controls.OField
+                    android:id="@+id/company_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:fieldName="company_id"
+                    app:fieldTextAppearance="?android:textAppearanceMedium">
+                </odoo.controls.OField>
+
+            </LinearLayout>
+        </odoo.controls.OForm>
+
+    </LinearLayout>
+</LinearLayout>

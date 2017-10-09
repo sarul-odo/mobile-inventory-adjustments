@@ -25,8 +25,11 @@ public class StockInventorySyncService extends OSyncService{
     @Override
     public void performDataSync(OSyncAdapter adapter, Bundle extras, OUser user) {
         ODomain domain = new ODomain();
+        domain.add("|");
         domain.add("state","=","draft");
-        adapter.syncDataLimit(80);
+        domain.add("state","=","confirm");
+        domain.add("&");
+        domain.add("filter","!=","none");
+        adapter.syncDataLimit(100).setDomain(domain);
     }
-
 }

@@ -7,18 +7,19 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.odoo.R;
 import com.odoo.addons.inventory.models.StockInventory;
 import com.odoo.core.orm.ODataRow;
 import com.odoo.core.support.addons.fragment.BaseFragment;
+import com.odoo.core.support.addons.fragment.IOnSearchViewChangeListener;
 import com.odoo.core.support.addons.fragment.ISyncStatusObserverListener;
 import com.odoo.core.support.drawer.ODrawerItem;
 import com.odoo.core.support.list.OCursorListAdapter;
@@ -30,16 +31,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by ko on 9/7/17.
+ * Created by ko on 10/5/17.
  */
 
 public class Adjustments extends BaseFragment
         implements LoaderManager.LoaderCallbacks<Cursor>,
-                   ISyncStatusObserverListener,
-                   SwipeRefreshLayout.OnRefreshListener,
-                   OCursorListAdapter.OnViewBindListener,
-                   AdapterView.OnItemClickListener,
-                   View.OnClickListener {
+        ISyncStatusObserverListener,
+        SwipeRefreshLayout.OnRefreshListener,
+        OCursorListAdapter.OnViewBindListener,
+        AdapterView.OnItemClickListener,
+        IOnSearchViewChangeListener,
+        View.OnClickListener
+{
 
     public static final String TAG = Adjustments.class.getSimpleName();
 
@@ -48,25 +51,10 @@ public class Adjustments extends BaseFragment
     private OCursorListAdapter listAdapter;
 
     @Override
-    public List<ODrawerItem> drawerMenus(Context context) {
-        List<ODrawerItem> menu = new ArrayList<>();
-        menu.add(new ODrawerItem(TAG)
-                .setTitle("Adjustment")
-                .setIcon(R.drawable.ic_action_suppliers)
-                .setInstance(new Adjustments()));
-        return menu;
-    }
-
-    @Override
-    public Class<StockInventory> database() {
-        return StockInventory.class;
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        setHasOptionsMenu(true);
-        setHasSyncStatusObserver(null, this, db());
+//        setHasOptionsMenu(true);
+//        setHasSyncStatusObserver(null, this, db());
         return inflater.inflate(R.layout.common_listview, container, false);
     }
 
@@ -75,12 +63,13 @@ public class Adjustments extends BaseFragment
         super.onViewCreated(view, savedInstanceState);
         mView = view;
         listView = (ListView) mView.findViewById(R.id.listview);
-        listAdapter = new OCursorListAdapter(getActivity(), null, R.layout.inventory_adjustment_listview);
+        listAdapter = new OCursorListAdapter(getActivity(), null, android.R.layout.simple_list_item_1);
         listView.setAdapter(listAdapter);
 
         listAdapter.setOnViewBindListener(this);
-
         listView.setOnItemClickListener(this);
+
+        setHasFloatingButton(view, R.id.fabButton, listView, this);
 
         setHasSyncStatusObserver(TAG, this, db());
         getLoaderManager().initLoader(0, null, this);
@@ -88,15 +77,14 @@ public class Adjustments extends BaseFragment
 
     @Override
     public void onViewBind(View view, Cursor cursor, ODataRow row) {
-        OControls.setText(view, R.id.name, row.getString("name"));
-        OControls.setText(view, R.id.info, row.getString("filter") + " " + row.getString("company_id"));
+        OControls.setText(view, android.R.id.text1, row.getString("name"));
     }
 
     @Override
-    public void onStatusChange(Boolean changed) {
-        if(changed){
-            getLoaderManager().restartLoader(0, null, this);
-        }
+    public List<ODrawerItem> drawerMenus(Context context) {
+        List<ODrawerItem> menu = new ArrayList<>();
+        menu.add(new ODrawerItem(TAG).setTitle("Adjustments").setInstance(new Adjustments()));
+        return menu;
     }
 
     @Override
@@ -117,8 +105,8 @@ public class Adjustments extends BaseFragment
             OControls.setGone(mView, R.id.swipe_container);
             OControls.setVisible(mView, R.id.data_list_no_item);
             setHasSwipeRefreshView(mView, R.id.data_list_no_item, this);
-            OControls.setText(mView, R.id.title, "No Tasks found");
-            OControls.setText(mView, R.id.subTitle, "Swipe to check new tasks");
+            OControls.setText(mView, R.id.title, "No Adjustments found");
+            OControls.setText(mView, R.id.subTitle, "Swipe to check new adjustments");
         }
         if (db().isEmptyTable()) {
             // Request for sync
@@ -127,13 +115,16 @@ public class Adjustments extends BaseFragment
     }
 
     @Override
+    public void onStatusChange(Boolean changed) {
+        getLoaderManager().restartLoader(0, null, this);
+//        onRefresh();
+    }
+
+    @Override
     public void onRefresh() {
+        Log.d("==========", " ___ REFRESH ___ ");
         if (inNetwork()) {
             parent().sync().requestSync(StockInventory.AUTHORITY);
-            setSwipeRefreshing(true);
-        }else {
-            hideRefreshingProgress();
-            Toast.makeText(getActivity(), _s(R.string.toast_network_required), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -143,10 +134,23 @@ public class Adjustments extends BaseFragment
     }
 
     @Override
+    public Class<StockInventory> database() {
+        return StockInventory.class;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void loadActivity(ODataRow row) {
+        Bundle data = new Bundle();
+        if (row != null) {
+            data = row.getPrimaryBundleData();
+        }
+        IntentUtils.startActivity(getActivity(), AdjustmentDetails.class, data);
     }
 
     @Override
@@ -158,24 +162,19 @@ public class Adjustments extends BaseFragment
         }
     }
 
-    private void loadActivity(ODataRow row) {
-        Bundle data = new Bundle();
-        if (row != null) {
-            data = row.getPrimaryBundleData();
-        }
-        IntentUtils.startActivity(getActivity(), AdjustmentDetail.class, data);
-    }
-
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ODataRow row = OCursorUtils.toDatarow((Cursor) listAdapter.getItem(position));
         loadActivity(row);
     }
-//
-//    public Bundle extra(Type type) {
-//        Bundle extra = new Bundle();
-//        extra.putString(EXTRA_KEY_TYPE, type.toString());
-//        return extra;
-//    }
 
+    @Override
+    public boolean onSearchViewTextChange(String newFilter) {
+        return false;
+    }
+
+    @Override
+    public void onSearchViewClose() {
+
+    }
 }
