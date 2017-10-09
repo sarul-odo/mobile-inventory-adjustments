@@ -28,7 +28,7 @@
                 app:fieldName="name"
                 app:fieldTextAppearance="?android:textAppearanceMedium"
                 app:showLabel="true"
-                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+                app:iconResource="@drawable/ic_action_name"></odoo.controls.OField>
 
             <odoo.controls.OField
                 android:id="@+id/location"
@@ -38,7 +38,7 @@
                 app:fieldName="location_id"
                 app:fieldTextAppearance="?android:textAppearanceMedium"
                 app:showLabel="true"
-                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+                app:iconResource="@drawable/ic_action_location"></odoo.controls.OField>
 
             <odoo.controls.OField
                 android:id="@+id/filter"
@@ -48,7 +48,7 @@
                 app:fieldName="filter"
                 app:fieldTextAppearance="?android:textAppearanceMedium"
                 app:showLabel="true"
-                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+                app:iconResource="@drawable/ic_action_drop_down"></odoo.controls.OField>
 
             <odoo.controls.OField
                 android:id="@+id/exhausted"
@@ -58,7 +58,7 @@
                 app:fieldName="exhausted"
                 app:fieldTextAppearance="?android:textAppearanceMedium"
                 app:showLabel="true"
-                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+                app:iconResource="@drawable/ic_action_check"></odoo.controls.OField>
 
             <odoo.controls.OField
                 android:id="@+id/date"
@@ -68,7 +68,7 @@
                 app:fieldName="date"
                 app:fieldTextAppearance="?android:textAppearanceMedium"
                 app:showLabel="true"
-                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+                app:iconResource="@drawable/ic_action_time"></odoo.controls.OField>
 
             <odoo.controls.OField
                 android:id="@+id/company"
@@ -78,7 +78,7 @@
                 app:fieldName="company_id"
                 app:fieldTextAppearance="?android:textAppearanceMedium"
                 app:showLabel="true"
-                app:iconResource="@drawable/ic_action_universe"></odoo.controls.OField>
+                app:iconResource="@drawable/ic_action_company"></odoo.controls.OField>
 
             <View
                 style="@style/ViewSeparator"
@@ -137,14 +137,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:fieldName="location_id"
-                    app:fieldTextAppearance="?android:textAppearanceMedium">
+                    app:fieldTextAppearance="?android:textAppearanceMedium"
+                    app:iconResource="@drawable/ic_action_location">
                 </odoo.controls.OField>
 
                 <odoo.controls.OField
                     android:id="@+id/filter_edit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:fieldName="filter">
+                    app:fieldName="filter"
+                    app:iconResource="@drawable/ic_action_drop_down">
                 </odoo.controls.OField>
 
                 <View
@@ -156,7 +158,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:fieldName="exhausted"
-                    app:showLabel="false">
+                    app:showLabel="false"
+                    app:iconResource="@drawable/ic_action_check">
                 </odoo.controls.OField>
 
                 <View
@@ -167,7 +170,8 @@
                     android:id="@+id/date_edit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:fieldName="date">
+                    app:fieldName="date"
+                    app:iconResource="@drawable/ic_action_time">
                 </odoo.controls.OField>
 
                 <odoo.controls.OField
@@ -175,7 +179,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:fieldName="company_id"
-                    app:fieldTextAppearance="?android:textAppearanceMedium">
+                    app:fieldTextAppearance="?android:textAppearanceMedium"
+                    app:iconResource="@drawable/ic_action_drop_down">
                 </odoo.controls.OField>
 
             </LinearLayout>

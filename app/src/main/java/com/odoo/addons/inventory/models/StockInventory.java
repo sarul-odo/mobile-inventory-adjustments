@@ -22,14 +22,11 @@ public class StockInventory extends OModel {
     public static final String AUTHORITY = "com.odoo.addons.inventory.models.stock_inventory";
 
     OColumn name = new OColumn("Name", OVarchar.class).setSize(100).setRequired();
-    OColumn filter = new OColumn("Filter", OSelection.class).addSelection("none", "All products")
-                                                            .addSelection("category", "One product category")
+    OColumn filter = new OColumn("Filter", OSelection.class).addSelection("category", "One product category")
                                                             .addSelection("product", "One product only")
                                                             .addSelection("partial", "Select products manually");
     OColumn state = new OColumn("State", OSelection.class).addSelection("draft", "Draft")
-                                                          .addSelection("cancel", "Cancelled")
-                                                          .addSelection("confirm", "In Progress")
-                                                          .addSelection("done", "Validated");
+                                                          .addSelection("confirm", "In Progress");
     OColumn exhausted = new OColumn("Include Exhausted Products", OBoolean.class);
     OColumn date = new OColumn("Date", ODateTime.class).setRequired();
     OColumn company_id = new OColumn("Company", ResCompany.class, OColumn.RelationType.ManyToOne).setRequired();
