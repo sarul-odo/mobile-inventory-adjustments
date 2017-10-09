@@ -7,7 +7,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -117,12 +116,10 @@ public class Adjustments extends BaseFragment
     @Override
     public void onStatusChange(Boolean changed) {
         getLoaderManager().restartLoader(0, null, this);
-//        onRefresh();
     }
 
     @Override
     public void onRefresh() {
-        Log.d("==========", " ___ REFRESH ___ ");
         if (inNetwork()) {
             parent().sync().requestSync(StockInventory.AUTHORITY);
         }
