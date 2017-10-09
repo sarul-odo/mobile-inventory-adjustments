@@ -23,6 +23,7 @@
     <string name="status_login_success">Login Success</string>
     <string name="status_logout_success">Logout Success</string>
     <string name="status_creating_account">Creating account</string>
+    <string name="stock_inventory_created">Creating stock inventory</string>
     <string name="status_redirecting">Redirecting&#8230;</string>
     <string name="label_select_user">Login to User</string>
     <string name="label_accounts">Accounts</string>

@@ -1,7 +1,9 @@
 package com.odoo.addons.inventory;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.widget.Toolbar;
@@ -20,11 +22,14 @@ import com.odoo.core.orm.ODataRow;
 import com.odoo.core.orm.OModel;
 import com.odoo.core.orm.OValues;
 import com.odoo.core.orm.fields.OColumn;
+import com.odoo.core.rpc.helper.ODomain;
 import com.odoo.core.support.OdooCompatActivity;
 import com.odoo.core.utils.IntentUtils;
 import com.odoo.core.utils.OAlert;
 import com.odoo.core.utils.OResource;
 import com.odoo.core.utils.OStringColorUtil;
+
+import java.util.List;
 
 import odoo.controls.OField;
 import odoo.controls.OForm;
@@ -51,12 +56,15 @@ public class AdjustmentDetails extends OdooCompatActivity
     private String newImage = null;
     private CollapsingToolbarLayout collapsingToolbarLayout;
     private Toolbar toolbar;
+    private Context mContext;
 //    private Adjustments.Type partnerType = Adjustments.Type.Customer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.stock_inventory_detail);
+
+        mContext = getApplicationContext();
 
         collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.stock_inventory_collapsing_toolbar);
 
@@ -198,6 +206,8 @@ public class AdjustmentDetails extends OdooCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        final OnStockInventoryChangeUpdate onStockInventoryChangeUpdate = new OnStockInventoryChangeUpdate();
+        final ODomain domain = new ODomain();
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
@@ -207,12 +217,15 @@ public class AdjustmentDetails extends OdooCompatActivity
                 if (values != null) {
                     if (record != null) {
                         stockInventory.update(record.getInt(OColumn.ROW_ID), values);
+                        onStockInventoryChangeUpdate.execute(domain);
                         Toast.makeText(this, R.string.toast_information_saved, Toast.LENGTH_LONG).show();
                         mEditMode = !mEditMode;
                         setupToolbar();
                     } else {
                         final int row_id = stockInventory.insert(values);
                         if (row_id != OModel.INVALID_ROW_ID) {
+                            onStockInventoryChangeUpdate.execute(domain);
+                            Toast.makeText(this, R.string.stock_inventory_created, Toast.LENGTH_LONG).show();
                             finish();
                         }
                     }
@@ -245,6 +258,7 @@ public class AdjustmentDetails extends OdooCompatActivity
                                 if (type == OAlert.ConfirmType.POSITIVE) {
                                     // Deleting record and finishing activity if success.
                                     if (stockInventory.delete(record.getInt(OColumn.ROW_ID))) {
+                                        onStockInventoryChangeUpdate.execute(domain);
                                         Toast.makeText(AdjustmentDetails.this, R.string.toast_record_deleted,
                                                 Toast.LENGTH_SHORT).show();
                                         finish();
@@ -265,14 +279,14 @@ public class AdjustmentDetails extends OdooCompatActivity
         return true;
     }
 
-    @Override
-    public void onFieldValueChange(OField field, Object value) {
-        if (field.getFieldName().equals("is_company")) {
-            Boolean checked = Boolean.parseBoolean(value.toString());
-            int view = (checked) ? View.GONE : View.VISIBLE;
-            findViewById(R.id.parent_id).setVisibility(view);
-        }
-    }
+//    @Override
+//    public void onFieldValueChange(OField field, Object value) {
+//        if (field.getFieldName().equals("is_company")) {
+//            Boolean checked = Boolean.parseBoolean(value.toString());
+//            int view = (checked) ? View.GONE : View.VISIBLE;
+//            findViewById(R.id.parent_id).setVisibility(view);
+//        }
+//    }
 
 //    private class BigImageLoader extends AsyncTask<Integer, Void, String> {
 
@@ -328,4 +342,37 @@ public class AdjustmentDetails extends OdooCompatActivity
             Toast.makeText(this, R.string.toast_image_size_too_large, Toast.LENGTH_LONG).show();
         }
     }
+
+    private class OnStockInventoryChangeUpdate extends AsyncTask<ODomain, Void, Void> {
+
+        @Override
+        protected Void doInBackground(ODomain... params) {
+            if (app.inNetwork()) {
+                ODomain domain = params[0];
+                List<ODataRow> rows = stockInventory.select(null, "id = ?", new String[]{"0"});
+                for (ODataRow row : rows) {
+                    stockInventory.quickCreateRecord(row);
+                }
+            /*Бусад бичлэгүүдийг update хийж байна*/
+                stockInventory.quickSyncRecords(domain);
+                stockInventory.quickSyncRecords(domain);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            if (!app.inNetwork())
+                Toast.makeText(mContext, OResource.string(mContext, R.string.toast_network_required), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onFieldValueChange(OField field, Object value) {
+//        if (record == null && field.getFieldName().equals("technic_id")) {
+//            ODataRow techVal = (ODataRow) value;
+//            technicSync(techVal.getString("id"));
+
+        }
 }
