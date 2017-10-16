@@ -20,8 +20,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.odoo.R;
-import com.odoo.addons.picking.models.PartScrapPhotos;
-import com.odoo.addons.picking.models.Picking;
+import com.odoo.addons.stock.Models.Picking;
 import com.odoo.core.orm.ODataRow;
 import com.odoo.core.rpc.helper.ODomain;
 import com.odoo.core.support.addons.fragment.BaseFragment;
@@ -107,14 +106,12 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
             case "done":
                 state = "Шилжсэн";
                 break;
-
         }
-
-        OControls.setText(view, R.id.tvPickingOrigin, row.getString("origin").equals("-") ? "Илгээгдээгүй" : row.getString("origin"));
-        OControls.setText(view, R.id.tvPickingLocation, row.getString("technic_name"));
-        OControls.setText(view, R.id.tvPickingPartner, row.getString("date"));
-        OControls.setText(view, R.id.tvPickingPO, row.getString("date"));
-        OControls.setText(view, R.id.tvPickingState, state;
+        OControls.setText(view, R.id.tvPickingOrigin, row.getString("name"));
+        OControls.setText(view, R.id.tvPickingLocation, row.getString("partner_name"));
+        OControls.setText(view, R.id.tvPickingPartner, row.getString("partner_name"));
+        OControls.setText(view, R.id.tvPickingPO, row.getString("origin"));
+        OControls.setText(view, R.id.tvPickingState, state);
     }
 
     @Override
@@ -145,7 +142,7 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
                 public void run() {
                     OControls.setGone(mView, R.id.loadingProgress);
                     OControls.setVisible(mView, R.id.swipe_container_picking);
-                    OControls.setGone(mView, R.id.data_list_no_item);
+                    OControls.setGone(mView, R.id.data_list_no_picking_item);
                     setHasSwipeRefreshView(mView, R.id.swipe_container_picking, ReceiptPickings.this);
                 }
             }, 500);
@@ -155,9 +152,9 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
                 public void run() {
                     OControls.setGone(mView, R.id.loadingProgress);
                     OControls.setGone(mView, R.id.swipe_container_picking);
-                    OControls.setVisible(mView, R.id.data_list_no_item);
-                    setHasSwipeRefreshView(mView, R.id.data_list_no_item, ReceiptPickings.this);
-                    OControls.setImage(mView, R.id.icon, R.drawable.ic_action_customers);
+                    OControls.setVisible(mView, R.id.data_list_no_picking_item);
+                    setHasSwipeRefreshView(mView, R.id.data_list_no_picking_item, ReceiptPickings.this);
+                    OControls.setImage(mView, R.id.icon, R.drawable.ic_action_suppliers);
                     OControls.setText(mView, R.id.title, _s(R.string.label_no_receipt_picking_found));
                     OControls.setText(mView, R.id.subTitle, "");
                 }
@@ -173,10 +170,11 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
     public void onRefresh() {
         if (inNetwork()) {
 //            parent().sync().requestSync(Picking.AUTHORITY);
-            OnPartScrapChangeUpdate onTireScrapChangeUpdate = new OnPartScrapChangeUpdate();
-            ODomain d = new ODomain();
-            /*swipe хийхэд бүх үзлэгийг update хйих*/
-            onTireScrapChangeUpdate.execute(d);
+//            OnPartScrapChangeUpdate onTireScrapChangeUpdate = new OnPartScrapChangeUpdate();
+//            ODomain d = new ODomain();
+//            /*swipe хийхэд бүх үзлэгийг update хйих*/
+//            onTireScrapChangeUpdate.execute(d);
+            parent().sync().requestSync(Picking.AUTHORITY);
             setSwipeRefreshing(true);
         } else {
             hideRefreshingProgress();
@@ -184,50 +182,50 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         }
     }
 
-    private class OnPartScrapChangeUpdate extends AsyncTask<ODomain, Void, Void> {
-        private ProgressDialog progressDialog;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            progressDialog = new ProgressDialog(getContext());
-            progressDialog.setTitle(R.string.title_please_wait_mn);
-            progressDialog.setMessage("Мэдээлэл шинэчилж байна.");
-//            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-//            progressDialog.setProgress(1);
-            progressDialog.setMax(mAdapter.getCount());
-            progressDialog.setCancelable(true);
-            progressDialog.show();
-        }
-
-        @Override
-        protected Void doInBackground(ODomain... params) {
-            if (inNetwork()) {
-//                ODomain domain = params[0];
-//                List<ODataRow> rows = scrapParts.select(null, "id = ?", new String[]{"0"});
-//                List<ODataRow> photoRows = partScrapPhotos.select(null, "id = ?", new String[]{"0"});
-//                for (ODataRow row : rows) {
-//                    scrapParts.quickCreateRecord(row);
-//                }
-//                for (ODataRow row : photoRows) {
-//                    partScrapPhotos.quickCreateRecord(row);
-//                }
-//                /*Бусад бичлэгүүдийг update хийж байна*/
-//                scrapParts.quickSyncRecords(domain);
-//                partScrapPhotos.quickSyncRecords(domain);
-            } else {
-                Toast.makeText(mContext, OResource.string(mContext, R.string.toast_network_required), Toast.LENGTH_LONG).show();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            hideRefreshingProgress();
-            progressDialog.dismiss();
-        }
-    }
+//    private class OnPartScrapChangeUpdate extends AsyncTask<ODomain, Void, Void> {
+//        private ProgressDialog progressDialog;
+//
+//        @Override
+//        protected void onPreExecute() {
+//            super.onPreExecute();
+//            progressDialog = new ProgressDialog(getContext());
+//            progressDialog.setTitle(R.string.title_please_wait_mn);
+//            progressDialog.setMessage("Мэдээлэл шинэчилж байна.");
+////            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+////            progressDialog.setProgress(1);
+//            progressDialog.setMax(mAdapter.getCount());
+//            progressDialog.setCancelable(true);
+//            progressDialog.show();
+//        }
+//
+//        @Override
+//        protected Void doInBackground(ODomain... params) {
+//            if (inNetwork()) {
+////                ODomain domain = params[0];
+////                List<ODataRow> rows = scrapParts.select(null, "id = ?", new String[]{"0"});
+////                List<ODataRow> photoRows = partScrapPhotos.select(null, "id = ?", new String[]{"0"});
+////                for (ODataRow row : rows) {
+////                    scrapParts.quickCreateRecord(row);
+////                }
+////                for (ODataRow row : photoRows) {
+////                    partScrapPhotos.quickCreateRecord(row);
+////                }
+////                /*Бусад бичлэгүүдийг update хийж байна*/
+////                scrapParts.quickSyncRecords(domain);
+////                partScrapPhotos.quickSyncRecords(domain);
+//            } else {
+//                Toast.makeText(mContext, OResource.string(mContext, R.string.toast_network_required), Toast.LENGTH_LONG).show();
+//            }
+//            return null;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Void aVoid) {
+//            super.onPostExecute(aVoid);
+//            hideRefreshingProgress();
+//            progressDialog.dismiss();
+//        }
+//    }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
@@ -237,7 +235,7 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
     @Override
     public List<ODrawerItem> drawerMenus(Context context) {
         List<ODrawerItem> items = new ArrayList<>();
-        items.add(new ODrawerItem(KEY).setTitle("Сэлбэг актлах хүсэлт")
+        items.add(new ODrawerItem(KEY).setTitle("Хүргэлтийн захиалгууд")
                 .setIcon(R.drawable.ic_action_suppliers)
                 .setInstance(new ReceiptPickings()));
         return items;

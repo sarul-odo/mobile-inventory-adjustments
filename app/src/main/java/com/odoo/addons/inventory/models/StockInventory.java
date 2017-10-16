@@ -3,6 +3,7 @@ package com.odoo.addons.inventory.models;
 import android.content.Context;
 import android.net.Uri;
 
+import com.odoo.addons.stock.Models.StockLocation;
 import com.odoo.base.addons.res.ResCompany;
 import com.odoo.core.orm.OModel;
 import com.odoo.core.orm.fields.OColumn;
