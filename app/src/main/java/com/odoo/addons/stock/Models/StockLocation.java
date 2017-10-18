@@ -1,4 +1,4 @@
-package com.odoo.addons.inventory.models;
+package com.odoo.addons.stock.Models;
 
 import android.content.Context;
 

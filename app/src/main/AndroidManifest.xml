@@ -103,7 +103,8 @@
             android:name="com.odoo.addons.customers.CustomerDetails"
             android:windowSoftInputMode="adjustPan" />
 
-        <service android:name=".addons.inventory.services.StockInventorySyncService"
+        <service
+            android:name=".addons.inventory.services.StockInventorySyncService"
             android:exported="true"
             android:process=":sync_stock_inventory">
             <intent-filter>
@@ -124,6 +125,32 @@
             android:name="com.odoo.addons.inventory.AdjustmentDetails"
             android:windowSoftInputMode="adjustPan" />
 
+
+        <!-- Sync Provider & Service Employee // -->
+
+        <provider
+            android:name="com.odoo.addons.picking.providers.PickingSyncProvider"
+            android:authorities="${applicationId}.core.provider.content.sync.picking"
+            android:label="@string/sync_label_picking"
+            android:multiprocess="true" />
+
+        <service
+            android:name="com.odoo.addons.picking.services.PickingSyncService"
+            android:exported="true"
+            android:process=":sync_feeds">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/picking_sync_adapter" />
+        </service>
+
+        <activity
+            android:name="com.odoo.addons.picking.ReceiptPickingDetails"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
 
 
     </application>

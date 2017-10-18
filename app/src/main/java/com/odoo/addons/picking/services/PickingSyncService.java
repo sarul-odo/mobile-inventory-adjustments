@@ -5,9 +5,9 @@ import android.content.SyncResult;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
-import com.odoo.addons.picking.models.PartsScrapReason;
-import com.odoo.addons.picking.models.Picking;
-import com.odoo.addons.picking.models.TechnicParts;
+//import com.odoo.addons.picking.models.PartsScrapReason;
+import com.odoo.addons.stock.Models.Picking;
+//import com.odoo.addons.picking.models.TechnicParts;
 import com.odoo.core.orm.OSQLite;
 import com.odoo.core.service.ISyncFinishListener;
 import com.odoo.core.service.OSyncAdapter;
@@ -18,8 +18,8 @@ import com.odoo.core.support.OUser;
  * Created by baaska on 5/30/17.
  */
 
-public class ScrapPartsSyncService extends OSyncService implements ISyncFinishListener {
-    public static final String TAG = ScrapPartsSyncService.class.getSimpleName();
+public class PickingSyncService extends OSyncService implements ISyncFinishListener {
+    public static final String TAG = PickingSyncService.class.getSimpleName();
 
     private OSQLite sqLite = null;
 
@@ -34,7 +34,7 @@ public class ScrapPartsSyncService extends OSyncService implements ISyncFinishLi
 
     @Override
     public void performDataSync(OSyncAdapter adapter, Bundle extras, OUser user) {
-        if (adapter.getModel().getModelName().equals("technic.parts.scrap")) {
+        if (adapter.getModel().getModelName().equals("stock.picking")) {
             adapter.syncDataLimit(80);
             adapter.onSyncFinish(this);
         }
@@ -42,10 +42,10 @@ public class ScrapPartsSyncService extends OSyncService implements ISyncFinishLi
 
     @Override
     public OSyncAdapter performNextSync(OUser user, SyncResult syncResult) {
-        TechnicParts technicParts = new TechnicParts(getApplicationContext(), user);
-        PartsScrapReason partsScrapReason = new PartsScrapReason(getApplicationContext(), user);
-        partsScrapReason.quickSyncRecords(null);
-        technicParts.quickSyncRecords(null);
+//        TechnicParts technicParts = new TechnicParts(getApplicationContext(), user);
+//        PartsScrapReason partsScrapReason = new PartsScrapReason(getApplicationContext(), user);
+//        partsScrapReason.quickSyncRecords(null);
+//        technicParts.quickSyncRecords(null);
         return null;
     }
 }
