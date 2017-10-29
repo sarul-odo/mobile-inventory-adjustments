@@ -15,8 +15,8 @@ public class ProductProduct extends OModel {
 
 //    public static final String TAG = ProductProduct.class.getSimpleName();
 
-    OColumn default_code = new OColumn("Default code", OVarchar.class).setSize(100);
-    OColumn barcode = new OColumn("Barcode", OVarchar.class).setSize(100);
+    OColumn default_code = new OColumn("Internal Reference", OVarchar.class);
+    OColumn barcode = new OColumn("Barcode", OVarchar.class);
 
     public ProductProduct(Context context, OUser user) {
         super(context, "product.product", user);

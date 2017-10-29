@@ -5,10 +5,7 @@ import android.content.SyncResult;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
-//import com.odoo.addons.picking.models.PartsScrapReason;
-import com.odoo.addons.inventory.models.ProductProduct;
-import com.odoo.addons.stock.Models.Picking;
-//import com.odoo.addons.picking.models.TechnicParts;
+import com.odoo.addons.stock.Models.PickingType;
 import com.odoo.core.orm.OSQLite;
 import com.odoo.core.service.ISyncFinishListener;
 import com.odoo.core.service.OSyncAdapter;
@@ -19,14 +16,14 @@ import com.odoo.core.support.OUser;
  * Created by baaska on 5/30/17.
  */
 
-public class PickingSyncService extends OSyncService implements ISyncFinishListener {
-    public static final String TAG = PickingSyncService.class.getSimpleName();
+public class PickingTypeSyncService extends OSyncService implements ISyncFinishListener {
+    public static final String TAG = PickingTypeSyncService.class.getSimpleName();
 
     private OSQLite sqLite = null;
 
     @Override
     public OSyncAdapter getSyncAdapter(OSyncService service, Context context) {
-        return new OSyncAdapter(context, Picking.class, service, true);
+        return new OSyncAdapter(context, PickingType.class, service, true);
     }
 
     public SQLiteDatabase getReadableDatabase() {
@@ -35,7 +32,7 @@ public class PickingSyncService extends OSyncService implements ISyncFinishListe
 
     @Override
     public void performDataSync(OSyncAdapter adapter, Bundle extras, OUser user) {
-        if (adapter.getModel().getModelName().equals("stock.picking")) {
+        if (adapter.getModel().getModelName().equals("stock.picking.type")) {
             adapter.syncDataLimit(80);
             adapter.onSyncFinish(this);
         }
@@ -43,10 +40,10 @@ public class PickingSyncService extends OSyncService implements ISyncFinishListe
 
     @Override
     public OSyncAdapter performNextSync(OUser user, SyncResult syncResult) {
-        ProductProduct product = new ProductProduct(getApplicationContext(), user);
+//        ProductProduct product = new ProductProduct(getApplicationContext(), user);
 //        PartsScrapReason partsScrapReason = new PartsScrapReason(getApplicationContext(), user);
 //        partsScrapReason.quickSyncRecords(null);
-        product.quickSyncRecords(null);
+//        product.quickSyncRecords(null);
         return null;
     }
 }

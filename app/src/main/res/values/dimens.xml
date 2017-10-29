@@ -2,7 +2,12 @@
 <resources>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="activity_horizontal_margin">16dp</dimen>
-
+    <dimen name="card_margin">5dp</dimen>
+    <dimen name="card_picking_radius">0dp</dimen>
+    <dimen name="card_title_padding">5dp</dimen>
+    <dimen name="picking_title">15dp</dimen>
+    <dimen name="picking_count">12dp</dimen>
+    <dimen name="picking_count_padding_bottom">2dp</dimen>
     <dimen name="default_8dp">8dp</dimen>
     <dimen name="default_16dp">16dp</dimen>
     <dimen name="app_bar_top_padding">0dp</dimen>

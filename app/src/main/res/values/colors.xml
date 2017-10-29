@@ -11,6 +11,7 @@
     <color name="drawer_background">#ffffffff</color>
     <color name="drawer_separator_text_color">#acacac</color>
     <color name="drawer_separator_background">#e5e5e5</color>
+    <color name="picking_title">#4c4c4c</color>
 
     <!-- Android Style Colors -->
     <color name="android_blue">#33B5E5</color>

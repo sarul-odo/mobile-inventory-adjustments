@@ -30,14 +30,19 @@ import com.odoo.core.orm.fields.OColumn;
 import com.odoo.core.orm.fields.types.ODateTime;
 import com.odoo.core.orm.fields.types.OSelection;
 import com.odoo.core.orm.fields.types.OVarchar;
+import com.odoo.core.rpc.helper.ODomain;
 import com.odoo.core.support.OUser;
-import com.odoo.core.utils.dialog.OChoiceDialog;
+import com.odoo.core.utils.ODateUtils;
+import com.odoo.core.utils.OPreferenceManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Picking extends OModel {
     public static final String AUTHORITY = BuildConfig.APPLICATION_ID + ".core.provider.content.sync.picking";
+    private Context mContext;
+    private OUser user;
+    private OPreferenceManager preferenceManager;
 
     OColumn name = new OColumn("Нэр", OVarchar.class);
     OColumn origin = new OColumn("Эх баримт", OVarchar.class);
@@ -62,6 +67,9 @@ public class Picking extends OModel {
 
     public Picking(Context context, OUser user) {
         super(context, "stock.picking", user);
+        this.mContext = context;
+        this.user = user;
+        preferenceManager = new OPreferenceManager(context);
     }
 
     public String storePartnerName(OValues value) {
@@ -75,4 +83,22 @@ public class Picking extends OModel {
         }
         return "";
     }
+
+    @Override
+    public ODomain defaultDomain() {
+        ODomain domain = new ODomain();
+        List<String> lidtDomain = new ArrayList<>();
+        lidtDomain.add("assigned");
+        lidtDomain.add("partially_available");
+        domain.add("state", "in", lidtDomain);
+        int data_limit = preferenceManager.getInt("sync_data_limit", 60);
+        domain.add("create_date", ">=", ODateUtils.getDateBefore(data_limit));
+        return domain;
+    }
+
+    @Override
+    public boolean allowDeleteRecordOnServer() {
+        return false;
+    }
+
 }

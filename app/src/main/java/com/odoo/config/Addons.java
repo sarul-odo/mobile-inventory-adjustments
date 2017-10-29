@@ -22,7 +22,7 @@ package com.odoo.config;
 import com.odoo.addons.customers.Customers;
 import com.odoo.addons.inventory.Adjustments;
 import com.odoo.addons.picking.ReceiptPickings;
-import com.odoo.addons.stock.Models.Picking;
+import com.odoo.addons.picking.StockPickings;
 import com.odoo.core.support.addons.AddonsHelper;
 import com.odoo.core.support.addons.OAddon;
 
@@ -39,4 +39,5 @@ public class Addons extends AddonsHelper {
     OAddon customers = new OAddon(Customers.class).setDefault();
     OAddon adjustments = new OAddon(Adjustments.class);
     OAddon receiptPickings = new OAddon(ReceiptPickings.class);
+    OAddon pickingType = new OAddon(StockPickings.class);
 }

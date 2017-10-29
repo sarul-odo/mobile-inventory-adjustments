@@ -22,11 +22,12 @@ package com.odoo.addons.stock.Models;
 import android.content.Context;
 
 import com.odoo.BuildConfig;
-import com.odoo.base.addons.res.ResPartner;
 import com.odoo.core.orm.OModel;
 import com.odoo.core.orm.OValues;
 import com.odoo.core.orm.annotation.Odoo;
 import com.odoo.core.orm.fields.OColumn;
+import com.odoo.core.orm.fields.types.OFloat;
+import com.odoo.core.orm.fields.types.OInteger;
 import com.odoo.core.orm.fields.types.OSelection;
 import com.odoo.core.orm.fields.types.OVarchar;
 import com.odoo.core.support.OUser;
@@ -35,10 +36,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PickingType extends OModel {
+    public static final String AUTHORITY = BuildConfig.APPLICATION_ID + ".core.provider.content.sync.picking_type";
 
     OColumn name = new OColumn("Нэр", OVarchar.class);
+    OColumn count_picking_ready = new OColumn("Count", OInteger.class);
+    OColumn code = new OColumn("Ажиллагааны төрөл", OSelection.class)
+            .addSelection("incoming", "Нийлүүлэгчид")
+            .addSelection("outgoing", "Хахилцагчид")
+            .addSelection("internal", "Дотоод");
+    OColumn warehouse_id = new OColumn("Агуулах", StockWarehouse.class, OColumn.RelationType.ManyToOne);
+
+    @Odoo.Functional(method = "storeWareHouseName", store = true, depends = {"warehouse_id"})
+    OColumn warehouse_name = new OColumn("Агуулахын нэр", OVarchar.class).setLocalColumn();
+
 
     public PickingType(Context context, OUser user) {
         super(context, "stock.picking.type", user);
+    }
+
+    public String storeWareHouseName(OValues values) {
+        try {
+            if (!values.getString("warehouse_id").equals("false")) {
+                List<Object> house = (ArrayList<Object>) values.get("warehouse_id");
+                return house.get(1) + "";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 }

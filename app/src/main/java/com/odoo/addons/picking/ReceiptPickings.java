@@ -1,28 +1,30 @@
 package com.odoo.addons.picking;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.Cursor;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.odoo.R;
 import com.odoo.addons.stock.Models.Picking;
 import com.odoo.core.orm.ODataRow;
-import com.odoo.core.rpc.helper.ODomain;
 import com.odoo.core.support.addons.fragment.BaseFragment;
 import com.odoo.core.support.addons.fragment.IOnSearchViewChangeListener;
 import com.odoo.core.support.addons.fragment.ISyncStatusObserverListener;
@@ -31,7 +33,6 @@ import com.odoo.core.support.list.OCursorListAdapter;
 import com.odoo.core.utils.IntentUtils;
 import com.odoo.core.utils.OControls;
 import com.odoo.core.utils.OCursorUtils;
-import com.odoo.core.utils.OResource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,11 +46,22 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         AdapterView.OnItemClickListener, View.OnClickListener {
 
     public static final String KEY = ReceiptPickings.class.getSimpleName();
-    private String mCurFilter = null;
+    private String mCurFilter = "";
+    private String pickingType = "";
     private View mView;
     private OCursorListAdapter mAdapter = null;
     private boolean syncRequested = false;
     private Context mContext;
+    private Toolbar toolbar;
+    public FragmentManager manager;
+
+    public ReceiptPickings() {
+    }
+
+    public ReceiptPickings(String pickingType, FragmentManager manager) {
+        this.pickingType = pickingType;
+        this.manager = manager;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -72,7 +84,6 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         mListViewPicking.setAdapter(mAdapter);
         mListViewPicking.setFastScrollAlwaysVisible(true);
         mListViewPicking.setOnItemClickListener(this);
-        setHasFloatingButton(view, R.id.fabButton, mListViewPicking, this);
         getLoaderManager().initLoader(0, null, this);
     }
 
@@ -120,17 +131,29 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         String order_by = "";
         String[] whereArgs = null;
         List<String> args = new ArrayList<>();
-
-        if (mCurFilter != null) {
-            where += " origin like ? ";
-            args.add("%" + mCurFilter + "%");
-            order_by = "origin ASC";
+        if (pickingType.length() > 0) {
+            where = " picking_type_id = ? and ";
+            args.add(pickingType);
         }
-
-        where = (args.size() > 0) ? where : null;
-        order_by = (args.size() > 0) ? order_by : null;
+        where += " origin like ? ";
+        args.add("%" + mCurFilter + "%");
+        order_by = " origin ASC";
+//        where = (args.size() > 0) ? where : null;
+//        args.addAll(Arrays.asList(new String[]{"%/OUT/%"}));
+//        args.addAll(Arrays.asList(new String[]{"done", "draft", "false", "false", section_id}));
+//        order_by = (args.size() > 0) ? order_by : null;
         whereArgs = (args.size() > 0) ? args.toArray(new String[args.size()]) : null;
+//        whereArgs = args.toArray(new String[args.size()]);
         return new CursorLoader(getActivity(), db().uri(), null, where, whereArgs, order_by);
+
+//        int section = crmCaseSection.selectRowId(mUser.getDefault_section_id());
+//        String section_id=mUser.getDefault_section_id()+"";
+//        where = " (state = ? or state = ? or state = ? or picking_local = ? or invoice_local = ?) and commitment_date < ?  and section_id = ? ";
+
+//        Delivery Orders
+//        whereArgs = args.toArray(new String[args.size()]);
+//        return new CursorLoader(getActivity(), db().uri(), null, where, whereArgs, "date_order DESC");
+
     }
 
     @Override
@@ -237,7 +260,7 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         List<ODrawerItem> items = new ArrayList<>();
         items.add(new ODrawerItem(KEY).setTitle("Хүргэлтийн захиалгууд")
                 .setIcon(R.drawable.ic_action_suppliers)
-                .setInstance(new ReceiptPickings()));
+                .setInstance(new ReceiptPickings("", null)));
         return items;
     }
 
@@ -246,16 +269,23 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         return Picking.class;
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        menu.clear();
-        inflater.inflate(R.menu.menu_partners, menu);
-        setHasSearchView(this, menu, R.id.menu_partner_search);
-    }
+//    @Override
+//    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+//        super.onCreateOptionsMenu(menu, inflater);
+//        menu.clear();
+//        inflater.inflate(R.menu.menu_partners, menu);
+//
+//        setTitle("Pickings");
+//        StockPickings ss = new StockPickings();
+//        getParentFragment();
+//        setHasSearchView(this, menu, R.id.menu_partner_search);
+//    }
 
     @Override
     public boolean onSearchViewTextChange(String newFilter) {
+        if (newFilter == null) {
+            newFilter = "";
+        }
         mCurFilter = newFilter;
         getLoaderManager().restartLoader(0, null, this);
         return true;
@@ -275,6 +305,22 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        StockPickings pickings = new StockPickings();
+        FragmentManager fragmentManager = manager;
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, pickings);
+        fragmentTransaction.commit();
+        return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_back, menu);
+    }
+
+    @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ODataRow row = OCursorUtils.toDatarow((Cursor) mAdapter.getItem(position));
         loadActivity(row);
@@ -282,10 +328,10 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.fabButton:
-                loadActivity(null);
-                break;
-        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
     }
 }

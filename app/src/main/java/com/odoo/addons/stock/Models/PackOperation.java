@@ -46,9 +46,9 @@ public class PackOperation extends OModel {
     OColumn product_qty = new OColumn("To Do", OFloat.class).setDefaultValue(0.0).setRequired();
     OColumn qty_done = new OColumn("Done", OFloat.class).setDefaultValue(0.0);
     @Odoo.Functional(method = "storeProductName", store = true, depends = {"product_id"})
-    OColumn product_name = new OColumn("State Title", OVarchar.class);
+    OColumn product_name = new OColumn("State Title", OVarchar.class).setLocalColumn();
     @Odoo.Functional(method = "storeProductUomName", store = true, depends = {"product_uom_id"})
-    OColumn product_uom_name = new OColumn("State Title", OVarchar.class);
+    OColumn product_uom_name = new OColumn("State Title", OVarchar.class).setLocalColumn();
 
     public PackOperation(Context context, OUser user) {
         super(context, "stock.pack.operation", user);

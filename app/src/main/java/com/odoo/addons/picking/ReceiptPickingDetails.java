@@ -1,26 +1,43 @@
 package com.odoo.addons.picking;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.odoo.App;
 import com.odoo.R;
 import com.odoo.addons.inventory.models.ProductProduct;
+import com.odoo.addons.stock.Models.PackOperation;
 import com.odoo.addons.stock.Models.Picking;
 import com.odoo.core.orm.ODataRow;
+import com.odoo.core.orm.OModel;
+import com.odoo.core.orm.OValues;
+import com.odoo.core.orm.ServerDataHelper;
 import com.odoo.core.orm.fields.OColumn;
-import com.odoo.core.rpc.helper.ODomain;
+import com.odoo.core.rpc.helper.OArguments;
+import com.odoo.core.rpc.helper.ORecordValues;
 import com.odoo.core.support.OdooCompatActivity;
+import com.odoo.core.utils.OAlert;
 import com.odoo.core.utils.OControls;
 import com.odoo.core.utils.OResource;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,18 +56,14 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
     public static final String TAG = ReceiptPickingDetails.class.getSimpleName();
     private Bundle extra;
     private OForm mForm;
-    private OField oState, oOrigin, date, technicId, isPaybale;
+    private EditText scanCode;
     private ODataRow record = null;
     private Boolean mEditMode = false;
     private Menu mMenu;
-    //    private TechnicsModel technic;
-//    private TechnicParts technicParts;
-//    private PartScrapPhotos partScrapPhotos;
     private Picking picking;
     private ExpandableListControl mList;
     private ExpandableListControl.ExpandableListAdapter mAdapter;
     private List<ODataRow> scrapPartLines = new ArrayList<>();
-    private List<ODataRow> technicPartLines = new ArrayList<>();
     private List<ODataRow> partRow = new ArrayList<>();
     private Toolbar toolbar;
     private LinearLayout layoutAddItem = null;
@@ -60,8 +73,11 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
     private HashMap<String, Boolean> toWizardTechParts = new HashMap<>();
     private List<Object> objects = new ArrayList<>();
     public static final int REQUEST_ADD_ITEMS = 323;
+    private List<ODataRow> lines = new ArrayList<>();
 
     private ProductProduct products = null;
+    private Button btnTransfer;
+    private OField state;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -78,16 +94,12 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
         mEditMode = (!hasRecordInExtra() ? true : false);
         picking = new Picking(this, null);
         products = new ProductProduct(this, null);
-//        mList = (ExpandableListControl) findViewById(R.id.ExpandListProductLine);
-//        mList.setOnClickListener(this);
         mForm = (OForm) findViewById(R.id.OFormPicking);
 
-//        oState = (OField) mForm.findViewById(R.id.StatePartScrap);
-//        oOrigin = (OField) mForm.findViewById(R.id.OriginPartScrap);
-//        date = (OField) mForm.findViewById(R.id.DatePartScrap);
-//        technicId = (OField) mForm.findViewById(R.id.TechnicPartScrap);
-//        isPaybale = (OField) mForm.findViewById(R.id.IsPayablePartScrap);
         layoutAddItem = (LinearLayout) findViewById(R.id.layoutAddItem);
+        scanCode = (EditText) findViewById(R.id.scanCode);
+        btnTransfer = (Button) findViewById(R.id.btnDoNewTransfer);
+        state = (OField) findViewById(R.id.StatePicking);
         layoutAddItem.setOnClickListener(this);
         setupToolbar();
         initAdapter();
@@ -96,6 +108,7 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
     private void ToolbarMenuSetVisibl(Boolean Visibility) {
         if (mMenu != null) {
             mMenu.findItem(R.id.menu_picking_edit).setVisible(!Visibility);
+            mMenu.findItem(R.id.menu_packeg_sync).setVisible(!Visibility);
             mMenu.findItem(R.id.menu_picking_save).setVisible(Visibility);
             mMenu.findItem(R.id.menu_picking_cancel).setVisible(Visibility);
         }
@@ -103,16 +116,65 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
 
     private void setMode(Boolean edit) {
         ToolbarMenuSetVisibl(edit);
-//        oOrigin.setEditable(false);
-//        oState.setEditable(false);
-//        if (edit && record == null) {
-//            technicId.setOnValueChangeListener(this);
-//        }
-//        if (record != null) {
-//            date.setEditable(false);
-//            technicId.setEditable(false);
-//            isPaybale.setEditable(false);
-//        }
+        scanCode.setVisibility(View.GONE);
+        scanCode.setText(null);
+        btnTransfer.setVisibility(View.GONE);
+        if (edit) {
+            if (state.getValue().equals("assigned")) {
+                btnTransfer.setVisibility(View.VISIBLE);
+                btnTransfer.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (hasRecordInExtra()) {
+                            DoNewTransfer doNewTransfer = new DoNewTransfer();
+                            if (app.inNetwork()) {
+                                doNewTransfer.execute();
+                                mEditMode = !mEditMode;
+                                setupToolbar();
+                                initAdapter();
+                            } else {
+                                Toast.makeText(getApplicationContext(), R.string.toast_network_required, Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    }
+                });
+            }
+
+            scanCode.setVisibility(View.VISIBLE);
+            scanCode.setOnKeyListener(new View.OnKeyListener() {
+                @Override
+                public boolean onKey(View v, int keyCode, KeyEvent event) {
+                    if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                        String ean13 = scanCode.getText().toString();
+                        if (productQtyChange(ean13)) {
+                            scanCode.setText(null);
+                            mAdapter.notifyDataSetChanged(objects);
+                            return true;
+                        } else if (scanCode.getText().length() > 0) {
+                            Toast.makeText(getApplicationContext(), "(" + ean13 + ")" + "\nУг бараа мөрөнд байхгүй байна!!!", Toast.LENGTH_SHORT).show();
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            });
+        }
+    }
+
+    private boolean productQtyChange(String ean13) {
+        for (int i = 0; i < objects.size(); i++) {
+            ODataRow packLine = (ODataRow) objects.get(i);
+            String code = products.browse(packLine.getInt("product_id")).getString("barcode");
+            float qty = packLine.getFloat("qty_done");
+            boolean swich = packLine.getBoolean("swicher");
+            if (code.equals(ean13)) {
+                packLine.put("qty_done", swich ? qty + 1 : qty - 1);
+                objects.remove(i);
+                objects.add(i, packLine);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void setupToolbar() {
@@ -120,15 +182,12 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
             setTitle("Үүсгэх");
             mForm.setEditable(mEditMode);
             mForm.initForm(null);
-//            ((OField) mForm.findViewById(R.id.DatePartScrap)).setValue(ODateUtils.getDate());
         } else {
-            setTitle("Хүргэлтийг захиалга дэлгэрэнгүй");
-            int ScrapId = extra.getInt(OColumn.ROW_ID);
-            record = picking.browse(ScrapId);
+            int pickingId = extra.getInt(OColumn.ROW_ID);
+            record = picking.browse(pickingId);
+            setTitle(record.getString("name"));
             mForm.initForm(record);
             mForm.setEditable(mEditMode);
-//            scrapPartLines = record.getM2MRecord("parts").browseEach();
-//            drawPart(scrapPartLines);
         }
         setMode(mEditMode);
     }
@@ -137,68 +196,156 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
         mList = (ExpandableListControl) findViewById(R.id.ExpandListProductLine);
         mList.setVisibility(View.VISIBLE);
         if (extra != null && record != null) {
-            List<ODataRow> lines = record.getO2MRecord("pack_operation_product_ids").browseEach();
-//            for (ODataRow line : lines) {
-//                int product_id = products.selectServerId(line.getInt("product_id"));
-//                if (product_id != 0) {
-//                    lineValues.put(product_id + "", line.getFloat("product_uom_qty"));
-//                    lineIds.put(product_id + "", line.getInt("id"));
-//                }
-//            }
+            lines.clear();
+            for (ODataRow line : record.getO2MRecord("pack_operation_product_ids").browseEach()) {
+                line.put("swicher", true);
+                lines.add(line);
+            }
+            objects.clear();
             objects.addAll(lines);
         }
         mAdapter = mList.getAdapter(R.layout.pickng_pack_operation_line_item, objects,
                 new ExpandableListControl.ExpandableListAdapterGetViewListener() {
                     @Override
-                    public View getView(int position, View mView, ViewGroup parent) {
-                        ODataRow row = (ODataRow) mAdapter.getItem(position);
+                    public View getView(final int position, View mView, ViewGroup parent) {
+                        final ODataRow row = (ODataRow) mAdapter.getItem(position);
+                        final EditText edtProductQtyDone = (EditText) mView.findViewById(R.id.edtProductQtyDone);
+                        edtProductQtyDone.setFocusable(mEditMode);
+                        final SwitchCompat switchCompat = (SwitchCompat) mView.findViewById(R.id.switchButton);
+                        switchCompat.setChecked(row.getBoolean("swicher"));
+                        if (mEditMode) {
+                            switchCompat.setVisibility(View.VISIBLE);
+                        }
+                        OControls.setText(mView, R.id.edtName, row.getString("product_name"));
                         OControls.setText(mView, R.id.edtName, row.getString("product_name"));
                         OControls.setText(mView, R.id.edtProductUom, row.getString("product_uom_name"));
                         OControls.setText(mView, R.id.edtProductOrderQty, row.getString("ordered_qty"));
                         OControls.setText(mView, R.id.edtProductQty, row.getString("product_qty"));
-                        OControls.setText(mView, R.id.edtProductQtyDone, row.getString("qty_done"));
+                        edtProductQtyDone.setText(row.getString("qty_done"));
+
+                        switchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                            @Override
+                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                row.put("swicher", isChecked);
+                                lines.remove(position);
+                                lines.add(position, row);
+                            }
+                        });
+
+                        edtProductQtyDone.addTextChangedListener(new TextWatcher() {
+                            @Override
+                            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                            }
+
+                            @Override
+                            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                row.put("qty_done", edtProductQtyDone.getText());
+                                lines.remove(position);
+                                lines.add(position, row);
+                            }
+
+                            @Override
+                            public void afterTextChanged(Editable s) {
+
+                            }
+                        });
                         return mView;
                     }
                 });
         mAdapter.notifyDataSetChanged(objects);
     }
 
-    private void drawPart(List<ODataRow> rows) {
-        objects.clear();
-        objects.addAll(rows);
-//        mAdapter = mList.getAdapter(R.layout.scrap_accumulator_accum_item, objects,
-//                new ExpandableListControl.ExpandableListAdapterGetViewListener() {
-//                    @Override
-//                    public View getView(final int position, View mView, ViewGroup parent) {
-//                        ODataRow row = (ODataRow) mAdapter.getItem(position);
-//                        OControls.setText(mView, R.id.name, (position + 1) + ". " + row.getString("name"));
-//                        OControls.setText(mView, R.id.date, row.getString("date"));
-//                        if (row.getString("date").equals("false"))
-//                            OControls.setText(mView, R.id.date, "");
-//                        OControls.setText(mView, R.id.product, row.getString("product_name"));
-//                        OControls.setText(mView, R.id.capacity, row.getString("reason_name"));
-//                        OControls.setText(mView, R.id.usage_percent, row.getString("part_cost"));
-//
-//                        if (row.getString("state").equals("draft"))
-//                            OControls.setText(mView, R.id.state, "Ноорог");
-//                        else if (row.getString("state").equals("in_use"))
-//                            OControls.setText(mView, R.id.state, "Ашиглаж буй");
-//                        else if (row.getString("state").equals("in_reserve"))
-//                            OControls.setText(mView, R.id.state, "Нөөцөнд");
-//                        else if (row.getString("state").equals("in_scrap"))
-//                            OControls.setText(mView, R.id.state, "Акталсан");
-//
-//                        mView.setOnClickListener(new View.OnClickListener() {
-//                            @Override
-//                            public void onClick(View v) {
-//                                ODataRow row = (ODataRow) mAdapter.getItem(position);
-//                                loadActivity(row);
-//                            }
-//                        });
-//                        return mView;
-//                    }
-//                });
-//        mAdapter.notifyDataSetChanged(objects);
+    private class ActionAssign extends AsyncTask<Void, Void, Void> {
+        private ProgressDialog progressDialog;
+        private String warning = null;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog = new ProgressDialog(ReceiptPickingDetails.this);
+            progressDialog.setCancelable(false);
+            progressDialog.setTitle(R.string.title_please_wait);
+            progressDialog.setMessage(OResource.string(ReceiptPickingDetails.this, R.string.pack_operation_sync));
+            progressDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            List<ODataRow> items = new ArrayList<>();
+            try {
+                ServerDataHelper helper = picking.getServerDataHelper();
+                OArguments arguments = new OArguments();
+                arguments.add(record.getInt("id"));
+                helper.callMethod("action_assign", arguments);
+                picking.quickCreateRecord(record);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            setupToolbar();
+            initAdapter();
+            progressDialog.dismiss();
+        }
+    }
+
+    private class DoNewTransfer extends AsyncTask<Void, Void, Void> {
+        private ProgressDialog progressDialog;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog = new ProgressDialog(ReceiptPickingDetails.this);
+            progressDialog.setCancelable(false);
+            progressDialog.setTitle(R.string.title_please_wait);
+            progressDialog.setMessage(OResource.string(ReceiptPickingDetails.this, R.string.picking_transfer));
+            progressDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            List<ODataRow> items = new ArrayList<>();
+            try {
+                ServerDataHelper helper = picking.getServerDataHelper();
+                OArguments arguments = new OArguments();
+                arguments.add(record.getInt("id"));
+                Object response = helper.callMethod("do_new_transfer", arguments);
+                if (response.equals(true)) {
+                    picking.delete(record.getInt("_id"));
+                } else {
+                    OModel wizard = new OModel(getApplicationContext(), "stock.backorder.confirmation", picking.getUser());
+                    ServerDataHelper immediateTransfer = new ServerDataHelper(getApplicationContext(), wizard, picking.getUser());
+                    OArguments argumentss = new OArguments();
+                    argumentss.add(new JSONArray().put(record.getInt("id")));
+                    argumentss.add(new JSONObject());
+
+                    HashMap<String, Object> args = new HashMap<>();
+                    args.put("pick_id", record.getInt("id"));
+                    Object aa = immediateTransfer.callMethod("create", argumentss, args);
+                    Object wizResponse = immediateTransfer.callMethod("process", argumentss);
+                    if (response.equals(true)) {
+                        picking.delete(record.getInt("_id"));
+                    }
+                }
+                finish();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            setupToolbar();
+            initAdapter();
+            progressDialog.dismiss();
+        }
     }
 
     private boolean hasRecordInExtra() {
@@ -215,246 +362,151 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        final OnPartScrapChangeUpdate onPartScrapChangeUpdate = new OnPartScrapChangeUpdate();
-        final ODomain domain = new ODomain();
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
                 break;
-//            case R.id.menu_save:
-//                OValues values = mForm.getValues();
-//                if (values != null) {
-//                    List ids = new ArrayList();
-//                    for (ODataRow row : scrapPartLines) {
-//                        OValues oValues = new OValues();
-//                        ids.add(row.getInt("_id"));
-//                        oValues.put("in_scrap", true);
-//                        technicParts.update(row.getInt("_id"), oValues);
-//                    }
-//                    if (ids.isEmpty()) {
-//                        OAlert.showError(this, "Сэлбэг сонгон уу?");
-//                        break;
-//                    }
-//
-//                    if (record != null) {
-//                        values.put("parts", new RelValues().replace(ids));
-//                        scrapParts.update(record.getInt(OColumn.ROW_ID), values);
-//                        onPartScrapChangeUpdate.execute(domain);
-//                        mEditMode = !mEditMode;
-//                        mForm.setEditable(mEditMode);
-//                        setMode(mEditMode);
-//                        Toast.makeText(this, R.string.tech_toast_information_saved, Toast.LENGTH_LONG).show();
-//                    } else {
-//                        values.put("parts", new RelValues().append(ids));
-//                        values.put("technic_name", technic.browse(values.getInt("technic")).getString("name"));
-//                        int row_id = scrapParts.insert(values);
-//                        if (row_id != scrapParts.INVALID_ROW_ID) {
-//                            onPartScrapChangeUpdate.execute(domain);
-//                            Toast.makeText(this, R.string.tech_toast_information_created, Toast.LENGTH_LONG).show();
-//                            mEditMode = !mEditMode;
-//                            finish();
-//                        }
-//                    }
-//                }
-//                break;
-//            case R.id.menu_cancel:
-//                OAlert.showConfirm(this, OResource.string(this, R.string.close_activity),
-//                        new OAlert.OnAlertConfirmListener() {
-//                            @Override
-//                            public void onConfirmChoiceSelect(OAlert.ConfirmType type) {
-//                                if (type == OAlert.ConfirmType.POSITIVE) {
-//                                    mEditMode = !mEditMode;
-//                                    setupToolbar();
-//                                } else {
-//                                    mForm.setEditable(true);
-//                                    setMode(mEditMode);
-//                                }
-//                            }
-//                        });
-//                break;
-//            case R.id.menu_edit:
-//                if (hasRecordInExtra()) {
-//                    mEditMode = !mEditMode;
+            case R.id.menu_picking_save:
+                if (app.inNetwork()) {
+                    OnPackOperationUpdate onPackOperationUpdate = new OnPackOperationUpdate();
+                    mEditMode = !mEditMode;
+                    mAdapter.notifyDataSetChanged(objects);
+                    onPackOperationUpdate.execute();
+                } else {
+                    Toast.makeText(getApplicationContext(), R.string.toast_network_required, Toast.LENGTH_LONG).show();
+                }
+                break;
+            case R.id.menu_picking_cancel:
+                OAlert.showConfirm(this, OResource.string(this, R.string.close_activity),
+                        new OAlert.OnAlertConfirmListener() {
+                            @Override
+                            public void onConfirmChoiceSelect(OAlert.ConfirmType type) {
+                                if (type == OAlert.ConfirmType.POSITIVE) {
+                                    mEditMode = !mEditMode;
+                                    setupToolbar();
+                                    initAdapter();
+                                } else {
+                                    mForm.setEditable(true);
+                                    setMode(mEditMode);
+                                }
+                            }
+                        });
+                break;
+            case R.id.menu_picking_edit:
+                if (hasRecordInExtra()) {
+                    mEditMode = !mEditMode;
 //                    mForm.setEditable(mEditMode);
-//                    setMode(mEditMode);
-//                }
-//                break;
-//            case R.id.menu_delete:
-//                OAlert.showConfirm(this, OResource.string(this,
-//                        R.string.to_delete),
-//                        new OAlert.OnAlertConfirmListener() {
-//                            @Override
-//                            public void onConfirmChoiceSelect(OAlert.ConfirmType type) {
-//                                if (type == OAlert.ConfirmType.POSITIVE) {
-//                                    if (scrapParts.delete(record.getInt(OColumn.ROW_ID))) {
-//                                        onPartScrapChangeUpdate.execute(domain);
-//                                        Toast.makeText(ReceiptPickingDetails.this, R.string.tech_toast_information_deleted,
-//                                                Toast.LENGTH_SHORT).show();
-//                                        finish();
-//                                    }
-//                                }
-//                            }
-//                        });
-//                break;
+                    setMode(mEditMode);
+                    initAdapter();
+                    scanCode.requestFocus();
+                }
+                break;
+            case R.id.menu_packeg_sync:
+                if (hasRecordInExtra()) {
+                    ActionAssign actionAssign = new ActionAssign();
+                    if (app.inNetwork()) {
+                        actionAssign.execute();
+                    } else {
+                        Toast.makeText(getApplicationContext(), R.string.toast_network_required, Toast.LENGTH_LONG).show();
+                    }
+                }
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.layoutAddItem:
-//                int techId = (Integer) technicId.getValue();
-//                if (techId > 0) {
-//                    getTechnicParts(techId);
-//                    Intent intent = new Intent(this, AddItemLineWizard.class);
-//                    Bundle extra = new Bundle();
-//                    for (String key : toWizardTechParts.keySet()) {
-//                        extra.putBoolean(key, toWizardTechParts.get(key));
-//                    }
-//                    AddItemLineWizard.mModel = technicParts;
-//                    intent.putExtras(extra);
-//                    startActivityForResult(intent, REQUEST_ADD_ITEMS);
-//                }
-//                break;
-        }
-    }
-
-//    private void getTechnicParts(int techId) {
-////        technicPartLines = technicParts.select(null, "technic = ?", new String[]{techId + ""});
-//        toWizardTechParts.clear();
-//        for (ODataRow line : technicPartLines) {
-//            toWizardTechParts.put(line.getString("_id"), false);
-//        }
-//        for (ODataRow line : scrapPartLines) {
-//            if (toWizardTechParts.containsKey(line.getString("_id"))) {
-//                toWizardTechParts.put(line.getString("_id"), true);
-//            }
-//        }
-//    }
-
-//    private void loadActivity(ODataRow row) {
-//        if (record != null) {
-////            Intent intent = new Intent(this, PartsDetailsWizard.class);
-//            Bundle extra = new Bundle();
-//            if (row != null) {
-//                extra = row.getPrimaryBundleData();
-//                extra.putString("scrap_id", record.getString("_id"));
-//                extra.putString("scrap_name", record.getString("origin"));
-//            }
-////            intent.putExtras(extra);
-////            startActivityForResult(intent, REQUEST_ADD_ITEMS);
-//        } else {
-////            OAlert.showAlert(this, OResource.string(this, R.string.required_save));
-//        }
-//    }
-
-    private class OnPartScrapChangeUpdate extends AsyncTask<ODomain, Void, Void> {
-
-        @Override
-        protected Void doInBackground(ODomain... params) {
-            if (app.inNetwork()) {
-//                ODomain domain = params[0];
-//                List<ODataRow> rows = scrapParts.select(null, "id = ?", new String[]{"0"});
-////                List<ODataRow> photoRows = partScrapPhotos.select(null, "id = ?", new String[]{"0"});
-//                for (ODataRow row : rows) {
-//                    scrapParts.quickCreateRecord(row);
-//                }
-//                for (ODataRow row : photoRows) {
-//                    partScrapPhotos.quickCreateRecord(row);
-//                }
-//                /*Бусад бичлэгүүдийг update хийж байна*/
-//                scrapParts.quickSyncRecords(domain);
-//                partScrapPhotos.quickSyncRecords(domain);
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            if (!app.inNetwork())
-                Toast.makeText(mContext, OResource.string(mContext, R.string.toast_network_required), Toast.LENGTH_LONG).show();
-        }
     }
 
     @Override
     public void onFieldValueChange(OField field, Object value) {
-//        if (record == null && field.getFieldName().equals("technic")) {
-//            ODataRow techVal = (ODataRow) value;
-//            technicSync(techVal.getString("id"));
-//        }
+
     }
 
     @Override
     public void finish() {
         if (mEditMode) {
-//            OAlert.showConfirm(this, OResource.string(this, R.string.close_activity),
-//                    new OAlert.OnAlertConfirmListener() {
-//                        @Override
-//                        public void onConfirmChoiceSelect(OAlert.ConfirmType type) {
-//                            if (type == OAlert.ConfirmType.POSITIVE) {
-//                                mEditMode = !mEditMode;
-//                                finish();
-//                            }
-//                        }
-//                    });
+            OAlert.showConfirm(this, OResource.string(this, R.string.close_activity),
+                    new OAlert.OnAlertConfirmListener() {
+                        @Override
+                        public void onConfirmChoiceSelect(OAlert.ConfirmType type) {
+                            if (type == OAlert.ConfirmType.POSITIVE) {
+                                mEditMode = !mEditMode;
+                                finish();
+                            }
+                        }
+                    });
         } else {
             super.finish();
         }
     }
 
-    public void technicSync(String serverTechId) {
-//        try {
-//            if (app.inNetwork()) {
-//                ODomain domain = new ODomain();
-//                domain.add("technic.id", "=", serverTechId);
-//                OnTechnicPartSync sync = new OnTechnicPartSync();
-//                sync.execute(domain);
-//            } else {
-//                Toast.makeText(this, R.string.toast_network_required, Toast.LENGTH_SHORT).show();
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-    }
+    private class OnPackOperationUpdate extends AsyncTask<OValues, Void, Boolean> {
 
-//    private class OnTechnicPartSync extends AsyncTask<ODomain, Void, Void> {
-//        @Override
-//        protected void onPreExecute() {
-//            super.onPreExecute();
-//            findViewById(R.id.partScrapProgress).setVisibility(View.VISIBLE);
-//        }
-//
-//        @Override
-//        protected Void doInBackground(ODomain... params) {
-//            try {
-//                technicParts.quickSyncRecords(params[0]);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            return null;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Void aVoid) {
-//            super.onPostExecute(aVoid);
-//            findViewById(R.id.partScrapProgress).setVisibility(View.GONE);
-//        }
-//    }
-//
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//
-//        if (requestCode == REQUEST_ADD_ITEMS && resultCode == Activity.RESULT_OK) {
-//            scrapPartLines.clear();
-//            for (String key : data.getExtras().keySet()) {
-//                if (data.getExtras().getBoolean(key)) {
-//                    scrapPartLines.add(technicParts.select(null, "_id = ?", new String[]{key}).get(0));
-//                }
-//            }
-//            drawPart(scrapPartLines);
-//        }
-//    }
+        private ProgressDialog mDialog;
+        PackOperation packOperation = new PackOperation(getApplicationContext(), null);
+        String productName = "";
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mDialog = new ProgressDialog(ReceiptPickingDetails.this);
+            mDialog.setTitle(R.string.title_working);
+            mDialog.setMessage("Мөрүүдийг шинэчилж байна...");
+            mDialog.setCancelable(false);
+            mDialog.show();
+        }
+
+        @Override
+        protected Boolean doInBackground(OValues... params) {
+            try {
+                Thread.sleep(500);
+                for (Object line : objects) {
+                    ODataRow row = (ODataRow) line;
+                    float qtyDone = row.getFloat("qty_done");
+                    if (qtyDone <= 0) {
+                        productName = row.getString("product_name");
+                        break;
+                    }
+                }
+                if (productName.length() > 0) {
+                    return false;
+                }
+                for (Object line : objects) {
+                    ODataRow dRow = (ODataRow) line;
+                    ORecordValues oRow = new ORecordValues();
+                    try {
+                        for (String key : dRow.keys()) {
+                            if (key.equals("qty_done")) {
+                                oRow.put(key, dRow.getFloat(key));
+                                break;
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    packOperation.getServerDataHelper().updateOnServer(oRow, dRow.getInt("id"));
+                }
+                picking.quickCreateRecord(record);
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            super.onPostExecute(success);
+            mDialog.dismiss();
+            if (success) {
+                Toast.makeText(ReceiptPickingDetails.this, "Мэдээлэл амжилттай хадгалагдлаа", Toast.LENGTH_LONG).show();
+                setupToolbar();
+                initAdapter();
+            } else if (productName.length() > 0) {
+                Toast.makeText(ReceiptPickingDetails.this, productName + "\nБарааны ТОО ХЭМЖЭЭГ оруулана уу!!!", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 }

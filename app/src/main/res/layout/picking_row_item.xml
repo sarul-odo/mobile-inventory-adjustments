@@ -32,7 +32,7 @@
             android:layout_weight="1"
             android:fontFamily="@string/font_normal"
             android:gravity="left"
-            android:text="technic name"
+            android:text="picking name"
             android:textAppearance="?android:textAppearanceSmall"
             android:textColor="@color/body_text_1" />
 

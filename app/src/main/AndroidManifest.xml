@@ -153,6 +153,33 @@
             android:windowSoftInputMode="adjustPan" />
 
 
+        <!-- Sync Provider & Service Employee // -->
+
+        <provider
+            android:name="com.odoo.addons.picking.providers.PickingTypeSyncProvider"
+            android:authorities="${applicationId}.core.provider.content.sync.picking_type"
+            android:label="@string/sync_label_picking_type"
+            android:multiprocess="true" />
+
+        <service
+            android:name="com.odoo.addons.picking.services.PickingTypeSyncService"
+            android:exported="true"
+            android:process=":sync_feeds">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/picking_type_sync_adapter" />
+        </service>
+
+        <!-- <activity
+             android:name="com.odoo.addons.picking.ReceiptPickingDetails"
+             android:screenOrientation="portrait"
+             android:windowSoftInputMode="adjustPan" />-->
+
+
     </application>
 
 </manifest>
