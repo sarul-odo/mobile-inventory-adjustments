@@ -4,19 +4,24 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Toast;
 
 import com.odoo.App;
@@ -39,7 +44,9 @@ import com.odoo.core.utils.OResource;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
@@ -61,6 +68,7 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
     private Boolean mEditMode = false;
     private Menu mMenu;
     private Picking picking;
+    private PackOperation packOperation;
     private ExpandableListControl mList;
     private ExpandableListControl.ExpandableListAdapter mAdapter;
     private List<ODataRow> scrapPartLines = new ArrayList<>();
@@ -72,12 +80,14 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
     /*Зүйлс оруулж ирэх*/
     private HashMap<String, Boolean> toWizardTechParts = new HashMap<>();
     private List<Object> objects = new ArrayList<>();
+
     public static final int REQUEST_ADD_ITEMS = 323;
     private List<ODataRow> lines = new ArrayList<>();
 
     private ProductProduct products = null;
     private Button btnTransfer;
     private OField state;
+    private SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -88,11 +98,26 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
         app = (App) getApplicationContext();
         mContext = getApplicationContext();
         toolbar = (Toolbar) findViewById(R.id.toolbarPicking);
+        ScrollView sv = (ScrollView) findViewById(R.id.scroll);
+        sv.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                try {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    v.clearFocus();
+                } catch (Exception e) {
+                    Log.e(TAG, e.toString());
+                    return true;
+                }
+                return false;
+            }
+        });
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
         mEditMode = (!hasRecordInExtra() ? true : false);
         picking = new Picking(this, null);
+        packOperation = new PackOperation(this, null);
         products = new ProductProduct(this, null);
         mForm = (OForm) findViewById(R.id.OFormPicking);
 
@@ -100,7 +125,6 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
         scanCode = (EditText) findViewById(R.id.scanCode);
         btnTransfer = (Button) findViewById(R.id.btnDoNewTransfer);
         state = (OField) findViewById(R.id.StatePicking);
-        layoutAddItem.setOnClickListener(this);
         setupToolbar();
         initAdapter();
     }
@@ -122,31 +146,34 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
         if (edit) {
             if (state.getValue().equals("assigned")) {
                 btnTransfer.setVisibility(View.VISIBLE);
-                btnTransfer.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (hasRecordInExtra()) {
-                            DoNewTransfer doNewTransfer = new DoNewTransfer();
-                            if (app.inNetwork()) {
-                                doNewTransfer.execute();
-                                mEditMode = !mEditMode;
-                                setupToolbar();
-                                initAdapter();
-                            } else {
-                                Toast.makeText(getApplicationContext(), R.string.toast_network_required, Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    }
-                });
+                btnTransfer.setOnClickListener(this);
             }
 
             scanCode.setVisibility(View.VISIBLE);
+            scanCode.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String txt = scanCode.getText().toString();
+                    mAdapter.notifyDataSetChangedWithSort(search(txt));
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+
+                }
+            });
+
             scanCode.setOnKeyListener(new View.OnKeyListener() {
                 @Override
                 public boolean onKey(View v, int keyCode, KeyEvent event) {
                     if (keyCode == KeyEvent.KEYCODE_ENTER) {
                         String ean13 = scanCode.getText().toString();
-                        if (productQtyChange(ean13)) {
+                        if (true) {
                             scanCode.setText(null);
                             mAdapter.notifyDataSetChanged(objects);
                             return true;
@@ -161,20 +188,33 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
         }
     }
 
-    private boolean productQtyChange(String ean13) {
-        for (int i = 0; i < objects.size(); i++) {
-            ODataRow packLine = (ODataRow) objects.get(i);
-            String code = products.browse(packLine.getInt("product_id")).getString("barcode");
-            float qty = packLine.getFloat("qty_done");
-            boolean swich = packLine.getBoolean("swicher");
-            if (code.equals(ean13)) {
-                packLine.put("qty_done", swich ? qty + 1 : qty - 1);
-                objects.remove(i);
-                objects.add(i, packLine);
-                return true;
+    private List<Object> search(String code) {
+
+        if (code.isEmpty()) {
+            return objects;
+        } else {
+            List<Object> searchObject = new ArrayList<>();
+            try {
+                code = code.toLowerCase();
+
+                for (int i = 0; i < objects.size(); i++) {
+                    ODataRow packLine = (ODataRow) objects.get(i);
+//                float qty = packLine.getFloat("qty_done");
+//                boolean swich = packLine.getBoolean("swicher");
+                    String ean13 = packLine.getString("barcode").toLowerCase();
+                    String name = packLine.getString("product_name").toLowerCase();
+                    if (ean13.contains(code) || name.contains(code)) {
+                        searchObject.add(packLine);
+//                packLine.put("qty_done", swich ? qty + 1 : qty - 1);
+//                objects.remove(i);
+//                objects.add(i, packLine);
+                    }
+                }
+            } catch (Exception e) {
+                Log.i(TAG, e.toString());
             }
+            return searchObject;
         }
-        return false;
     }
 
     private void setupToolbar() {
@@ -199,6 +239,10 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
             lines.clear();
             for (ODataRow line : record.getO2MRecord("pack_operation_product_ids").browseEach()) {
                 line.put("swicher", true);
+                Calendar c = Calendar.getInstance();
+                String formattedDate = df.format(c.getTime());
+                Log.i("formattedDate==f===", formattedDate);
+                line.put("seq_date", formattedDate);
                 lines.add(line);
             }
             objects.clear();
@@ -206,8 +250,20 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
         }
         mAdapter = mList.getAdapter(R.layout.pickng_pack_operation_line_item, objects,
                 new ExpandableListControl.ExpandableListAdapterGetViewListener() {
+                    UpdateServerQty updateServerQty = new UpdateServerQty();
+                    List<Integer> positions = new ArrayList<>();
+
+                    private void colorChange(View mView, int color) {
+                        OControls.setTextColor(mView, R.id.edtName, OResource.color(mContext, color));
+                        OControls.setTextColor(mView, R.id.txtBarCode, OResource.color(mContext, color));
+                        OControls.setTextColor(mView, R.id.edtProductUom, OResource.color(mContext, color));
+                        OControls.setTextColor(mView, R.id.edtProductOrderQty, OResource.color(mContext, color));
+                        OControls.setTextColor(mView, R.id.edtProductQty, OResource.color(mContext, color));
+                        OControls.setTextColor(mView, R.id.edtProductQtyDone, OResource.color(mContext, color));
+                    }
+
                     @Override
-                    public View getView(final int position, View mView, ViewGroup parent) {
+                    public View getView(final int position, final View mView, ViewGroup parent) {
                         final ODataRow row = (ODataRow) mAdapter.getItem(position);
                         final EditText edtProductQtyDone = (EditText) mView.findViewById(R.id.edtProductQtyDone);
                         edtProductQtyDone.setFocusable(mEditMode);
@@ -216,12 +272,27 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
                         if (mEditMode) {
                             switchCompat.setVisibility(View.VISIBLE);
                         }
+                        final CardView cardView = (CardView) mView.findViewById(R.id.picking_card_view);
+
+                        for (int pos : positions) {
+                            if (pos == position)
+                                cardView.setCardBackgroundColor(OResource.color(mContext, R.color.drawer_separator_background));
+                        }
+
                         OControls.setText(mView, R.id.edtName, row.getString("product_name"));
-                        OControls.setText(mView, R.id.edtName, row.getString("product_name"));
+                        OControls.setText(mView, R.id.txtBarCode, row.getString("barcode").equals("false") ? "" : row.getString("barcode"));
                         OControls.setText(mView, R.id.edtProductUom, row.getString("product_uom_name"));
                         OControls.setText(mView, R.id.edtProductOrderQty, row.getString("ordered_qty"));
                         OControls.setText(mView, R.id.edtProductQty, row.getString("product_qty"));
                         edtProductQtyDone.setText(row.getString("qty_done"));
+
+                        int color = R.color.body_text_2;
+                        if (row.getFloat("product_qty").equals(row.getFloat("qty_done"))) {
+                            color = R.color.line_green;
+                        } else if (row.getFloat("product_qty") < row.getFloat("qty_done")) {
+                            color = R.color.line_red;
+                        }
+                        colorChange(mView, color);
 
                         switchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                             @Override
@@ -232,28 +303,107 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
                             }
                         });
 
-                        edtProductQtyDone.addTextChangedListener(new TextWatcher() {
+                        edtProductQtyDone.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                             @Override
-                            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-                            }
-
-                            @Override
-                            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                                row.put("qty_done", edtProductQtyDone.getText());
-                                lines.remove(position);
-                                lines.add(position, row);
-                            }
-
-                            @Override
-                            public void afterTextChanged(Editable s) {
-
+                            public void onFocusChange(View v, boolean hasFocus) {
+                                if (!hasFocus) {
+                                    try {
+                                        if (edtProductQtyDone.length() == 0) {
+                                            edtProductQtyDone.setText("0.0");
+                                        }
+                                        row.put("qty_done", edtProductQtyDone.getText().toString());
+                                        Log.i("seq_date=====", row.getString("seq_date"));
+                                        for (int i = 0; i < objects.size(); i++) {
+                                            ODataRow r = (ODataRow) objects.get(i);
+                                            Log.i("seq_date==rr===", r.getString("seq_date"));
+                                            if (r.getString("id").equals(row.getString("id"))) {
+                                                int color = R.color.body_text_2;
+                                                if (row.getFloat("product_qty").equals(row.getFloat("qty_done"))) {
+                                                    color = R.color.line_green;
+                                                } else if (row.getFloat("product_qty") < row.getFloat("qty_done")) {
+                                                    color = R.color.line_red;
+                                                }
+                                                if (cardView.getCardBackgroundColor().getDefaultColor() != OResource.color(mContext, R.color.drawer_separator_background)) {
+                                                    if (positions.size() == 0) {
+                                                        positions.add(objects.size() - 1);
+                                                    } else {
+                                                        int m = positions.get(positions.size() - 1);
+                                                        positions.add(m - 1);
+                                                    }
+                                                }
+                                                cardView.setCardBackgroundColor(OResource.color(mContext, R.color.drawer_separator_background));
+                                                colorChange(mView, color);
+                                                Calendar c = Calendar.getInstance();
+                                                String date_date = df.format(c.getTime());
+                                                Log.i("formattedDate=====", date_date);
+                                                row.put("seq_date", date_date);
+                                                objects.remove(i);
+                                                objects.add(i, row);
+                                                mAdapter.notifyDataSetChangedWithSort(objects);
+                                                break;
+                                            }
+                                        }
+                                    } catch (NumberFormatException | NullPointerException e) {
+                                        edtProductQtyDone.setText("0");
+                                        colorChange(mView, R.color.body_text_2);
+                                    } catch (Exception e) {
+                                        Log.i(TAG, e.toString());
+                                    }
+                                }
                             }
                         });
                         return mView;
                     }
                 });
         mAdapter.notifyDataSetChanged(objects);
+    }
+
+    private class UpdateServerQty extends AsyncTask<List, Void, Void> {
+        private ProgressDialog progressDialog;
+
+//        @Override
+//        protected void onPreExecute() {
+//            super.onPreExecute();
+//            progressDialog = new ProgressDialog(ReceiptPickingDetails.this);
+//            progressDialog.setCancelable(false);
+//            progressDialog.setTitle(R.string.title_please_wait);
+//            progressDialog.setMessage(OResource.string(ReceiptPickingDetails.this, R.string.pack_operation_sync));
+////            progressDialog.show();
+//                Calendar c = Calendar.getInstance();
+//                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//                String formattedDate = df.format(c.getTime());
+//        }
+
+        @Override
+        protected Void doInBackground(List... params) {
+            List param = new ArrayList();
+            param = params[0];
+            ORecordValues value = new ORecordValues();
+            float qty = Float.parseFloat(param.get(0).toString());
+            value.put("qty_done", qty);
+            int serverId = Integer.parseInt(param.get(1).toString());
+            try {
+                packOperation.getServerDataHelper().updateOnServer(value, serverId);
+//                ServerDataHelper helper = picking.getServerDataHelper();
+//                OArguments arguments = new OArguments();
+//                arguments.add(record.getInt("id"));
+//                helper.callMethod("action_assign", arguments);
+//                picking.quickCreateRecord(record);
+                ODataRow lineRecord = new ODataRow();
+                lineRecord.put("id", serverId);
+                packOperation.quickCreateRecord(lineRecord);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            initAdapter();
+//            progressDialog.dismiss();
+        }
     }
 
     private class ActionAssign extends AsyncTask<Void, Void, Void> {
@@ -323,7 +473,6 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
                     OArguments argumentss = new OArguments();
                     argumentss.add(new JSONArray().put(record.getInt("id")));
                     argumentss.add(new JSONObject());
-
                     HashMap<String, Object> args = new HashMap<>();
                     args.put("pick_id", record.getInt("id"));
                     Object aa = immediateTransfer.callMethod("create", argumentss, args);
@@ -417,6 +566,23 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
 
     @Override
     public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btnDoNewTransfer:
+                Log.i("btnClick===", "work");
+//                if (hasRecordInExtra()) {
+//                            DoNewTransfer doNewTransfer = new DoNewTransfer();
+//                            if (app.inNetwork()) {
+//                                doNewTransfer.execute();
+//                                mEditMode = !mEditMode;
+//                                setupToolbar();
+//                                initAdapter();
+//                            } else {
+//                                Toast.makeText(getApplicationContext(), R.string.toast_network_required, Toast.LENGTH_LONG).show();
+//                            }
+//                        }
+                break;
+        }
+
     }
 
     @Override
@@ -445,7 +611,6 @@ public class ReceiptPickingDetails extends OdooCompatActivity implements OField.
     private class OnPackOperationUpdate extends AsyncTask<OValues, Void, Boolean> {
 
         private ProgressDialog mDialog;
-        PackOperation packOperation = new PackOperation(getApplicationContext(), null);
         String productName = "";
 
         @Override

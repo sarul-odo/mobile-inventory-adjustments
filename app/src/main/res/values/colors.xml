@@ -23,8 +23,9 @@
     <color name="android_orange">#FFBB33</color>
     <color name="android_orange_dark">#FF8800</color>
     <color name="android_red">#FF4444</color>
+    <color name="line_red">#A74545</color>
+    <color name="line_green">#4FB551</color>
     <color name="android_red_dark">#CC0000</color>
-
     <color name="control_pressed">#acacac</color>
 
 

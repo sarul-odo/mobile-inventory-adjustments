@@ -24,6 +24,7 @@ import android.util.Log;
 
 import com.odoo.BuildConfig;
 import com.odoo.addons.inventory.models.ProductProduct;
+import com.odoo.core.orm.ODataRow;
 import com.odoo.core.orm.OModel;
 import com.odoo.core.orm.OValues;
 import com.odoo.core.orm.annotation.Odoo;
@@ -39,6 +40,8 @@ import java.util.List;
 
 public class PackOperation extends OModel {
 
+    private ProductProduct productProduct;
+    private Context context;
     OColumn picking_id = new OColumn("Stock Picking", Picking.class, OColumn.RelationType.ManyToOne);
     OColumn product_id = new OColumn("Product", ProductProduct.class, OColumn.RelationType.ManyToOne);
     OColumn product_uom_id = new OColumn("Unit of Measure", ProductUom.class, OColumn.RelationType.ManyToOne);
@@ -46,12 +49,17 @@ public class PackOperation extends OModel {
     OColumn product_qty = new OColumn("To Do", OFloat.class).setDefaultValue(0.0).setRequired();
     OColumn qty_done = new OColumn("Done", OFloat.class).setDefaultValue(0.0);
     @Odoo.Functional(method = "storeProductName", store = true, depends = {"product_id"})
-    OColumn product_name = new OColumn("State Title", OVarchar.class).setLocalColumn();
+    OColumn product_name = new OColumn("Product name", OVarchar.class).setLocalColumn();
+
+    @Odoo.Functional(method = "storeBarcodeName", store = true, depends = {"product_id"})
+    OColumn barcode = new OColumn("Barcode", OVarchar.class).setLocalColumn();
+
     @Odoo.Functional(method = "storeProductUomName", store = true, depends = {"product_uom_id"})
     OColumn product_uom_name = new OColumn("State Title", OVarchar.class).setLocalColumn();
 
     public PackOperation(Context context, OUser user) {
         super(context, "stock.pack.operation", user);
+        this.context = context;
     }
 
     public String storeProductName(OValues values) {
@@ -59,6 +67,22 @@ public class PackOperation extends OModel {
             if (!values.getString("product_id").equals("false")) {
                 List<Object> product_id = (ArrayList<Object>) values.get("product_id");
                 return product_id.get(1) + "";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public String storeBarcodeName(OValues values) {
+        try {
+            if (!values.getString("product_id").equals("false")) {
+                List<Object> product = (ArrayList<Object>) values.get("product_id");
+                productProduct = new ProductProduct(context, null);
+                ODataRow productRow = productProduct.select(null, "id = ?", new String[]{product.get(0).toString()}).get(0);
+                if (productRow.size() > 0) {
+                    return productRow.getString("barcode");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

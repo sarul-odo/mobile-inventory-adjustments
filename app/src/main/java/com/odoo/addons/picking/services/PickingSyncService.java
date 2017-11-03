@@ -35,6 +35,9 @@ public class PickingSyncService extends OSyncService implements ISyncFinishListe
 
     @Override
     public void performDataSync(OSyncAdapter adapter, Bundle extras, OUser user) {
+
+        ProductProduct product = new ProductProduct(getApplicationContext(), user);
+        product.quickSyncRecords(null);
         if (adapter.getModel().getModelName().equals("stock.picking")) {
             adapter.syncDataLimit(80);
             adapter.onSyncFinish(this);
@@ -43,10 +46,8 @@ public class PickingSyncService extends OSyncService implements ISyncFinishListe
 
     @Override
     public OSyncAdapter performNextSync(OUser user, SyncResult syncResult) {
-        ProductProduct product = new ProductProduct(getApplicationContext(), user);
 //        PartsScrapReason partsScrapReason = new PartsScrapReason(getApplicationContext(), user);
 //        partsScrapReason.quickSyncRecords(null);
-        product.quickSyncRecords(null);
         return null;
     }
 }

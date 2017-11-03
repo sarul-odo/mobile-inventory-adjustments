@@ -18,6 +18,7 @@
         app:titleMarginStart="@dimen/default_16dp" />
 
     <ScrollView
+        android:id="@+id/scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 

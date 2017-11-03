@@ -80,7 +80,6 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         ListView mListViewPicking = (ListView) view.findViewById(R.id.lw_picking);
         mAdapter = new OCursorListAdapter(getActivity(), null, R.layout.picking_row_item);
         mAdapter.setOnViewBindListener(this);
-        mAdapter.setHasSectionIndexers(true, "name");
         mListViewPicking.setAdapter(mAdapter);
         mListViewPicking.setFastScrollAlwaysVisible(true);
         mListViewPicking.setOnItemClickListener(this);
@@ -138,21 +137,8 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         where += " origin like ? ";
         args.add("%" + mCurFilter + "%");
         order_by = " origin ASC";
-//        where = (args.size() > 0) ? where : null;
-//        args.addAll(Arrays.asList(new String[]{"%/OUT/%"}));
-//        args.addAll(Arrays.asList(new String[]{"done", "draft", "false", "false", section_id}));
-//        order_by = (args.size() > 0) ? order_by : null;
         whereArgs = (args.size() > 0) ? args.toArray(new String[args.size()]) : null;
-//        whereArgs = args.toArray(new String[args.size()]);
         return new CursorLoader(getActivity(), db().uri(), null, where, whereArgs, order_by);
-
-//        int section = crmCaseSection.selectRowId(mUser.getDefault_section_id());
-//        String section_id=mUser.getDefault_section_id()+"";
-//        where = " (state = ? or state = ? or state = ? or picking_local = ? or invoice_local = ?) and commitment_date < ?  and section_id = ? ";
-
-//        Delivery Orders
-//        whereArgs = args.toArray(new String[args.size()]);
-//        return new CursorLoader(getActivity(), db().uri(), null, where, whereArgs, "date_order DESC");
 
     }
 
@@ -192,11 +178,6 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
     @Override
     public void onRefresh() {
         if (inNetwork()) {
-//            parent().sync().requestSync(Picking.AUTHORITY);
-//            OnPartScrapChangeUpdate onTireScrapChangeUpdate = new OnPartScrapChangeUpdate();
-//            ODomain d = new ODomain();
-//            /*swipe хийхэд бүх үзлэгийг update хйих*/
-//            onTireScrapChangeUpdate.execute(d);
             parent().sync().requestSync(Picking.AUTHORITY);
             setSwipeRefreshing(true);
         } else {
@@ -204,51 +185,6 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
             Toast.makeText(getActivity(), _s(R.string.toast_network_required), Toast.LENGTH_LONG).show();
         }
     }
-
-//    private class OnPartScrapChangeUpdate extends AsyncTask<ODomain, Void, Void> {
-//        private ProgressDialog progressDialog;
-//
-//        @Override
-//        protected void onPreExecute() {
-//            super.onPreExecute();
-//            progressDialog = new ProgressDialog(getContext());
-//            progressDialog.setTitle(R.string.title_please_wait_mn);
-//            progressDialog.setMessage("Мэдээлэл шинэчилж байна.");
-////            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-////            progressDialog.setProgress(1);
-//            progressDialog.setMax(mAdapter.getCount());
-//            progressDialog.setCancelable(true);
-//            progressDialog.show();
-//        }
-//
-//        @Override
-//        protected Void doInBackground(ODomain... params) {
-//            if (inNetwork()) {
-////                ODomain domain = params[0];
-////                List<ODataRow> rows = scrapParts.select(null, "id = ?", new String[]{"0"});
-////                List<ODataRow> photoRows = partScrapPhotos.select(null, "id = ?", new String[]{"0"});
-////                for (ODataRow row : rows) {
-////                    scrapParts.quickCreateRecord(row);
-////                }
-////                for (ODataRow row : photoRows) {
-////                    partScrapPhotos.quickCreateRecord(row);
-////                }
-////                /*Бусад бичлэгүүдийг update хийж байна*/
-////                scrapParts.quickSyncRecords(domain);
-////                partScrapPhotos.quickSyncRecords(domain);
-//            } else {
-//                Toast.makeText(mContext, OResource.string(mContext, R.string.toast_network_required), Toast.LENGTH_LONG).show();
-//            }
-//            return null;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Void aVoid) {
-//            super.onPostExecute(aVoid);
-//            hideRefreshingProgress();
-//            progressDialog.dismiss();
-//        }
-//    }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
@@ -268,18 +204,6 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
     public Class<Picking> database() {
         return Picking.class;
     }
-
-//    @Override
-//    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-//        super.onCreateOptionsMenu(menu, inflater);
-//        menu.clear();
-//        inflater.inflate(R.menu.menu_partners, menu);
-//
-//        setTitle("Pickings");
-//        StockPickings ss = new StockPickings();
-//        getParentFragment();
-//        setHasSearchView(this, menu, R.id.menu_partner_search);
-//    }
 
     @Override
     public boolean onSearchViewTextChange(String newFilter) {
@@ -306,11 +230,15 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        StockPickings pickings = new StockPickings();
-        FragmentManager fragmentManager = manager;
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragment_container, pickings);
-        fragmentTransaction.commit();
+        try {
+            StockPickings pickings = new StockPickings();
+            FragmentManager fragmentManager = manager;
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.fragment_container, pickings);
+            fragmentTransaction.commit();
+        } catch (Exception e) {
+            Log.e(KEY, e.toString());
+        }
         return super.onOptionsItemSelected(item);
     }
 
