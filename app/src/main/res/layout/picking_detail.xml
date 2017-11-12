@@ -17,153 +17,139 @@
         app:theme="@style/AppBar.Dark"
         app:titleMarginStart="@dimen/default_16dp" />
 
-    <ScrollView
-        android:id="@+id/scroll"
+    <android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/swipe_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
-        <odoo.controls.OForm
-            android:id="@+id/OFormPicking"
+
+        <ScrollView
+            android:id="@+id/scroll"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:controlIconTint="@color/body_text_3"
-            app:modelName="stock.picking">
+            android:layout_height="wrap_content">
 
-            <LinearLayout
+            <odoo.controls.OForm
+                android:id="@+id/OFormPicking"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <odoo.controls.OField
-                    android:id="@+id/NamePicking"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:defaultFieldValue="-"
-                    app:fieldName="name"
-                    app:fieldTextAppearance="?android:textAppearanceLarge" />
-
-                <odoo.controls.OField
-                    android:id="@+id/OriginPicking"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:defaultFieldValue="-"
-                    app:fieldName="origin"
-                    app:fieldTextAppearance="?android:textAppearanceLarge" />
-
-                <odoo.controls.OField
-                    android:id="@+id/MinDatePicking"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:fieldLabelColor="@color/theme_secondary"
-                    app:fieldName="min_date"
-                    app:fieldTextAppearance="?android:textAppearanceSmall" />
-
-                <odoo.controls.OField
-                    android:id="@+id/PartnerPicking"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:fieldLabelColor="@color/theme_secondary"
-                    app:fieldName="partner_id"
-                    app:fieldTextAppearance="?android:textAppearanceSmall"
-                    app:widgetType="SearchableLive" />
-
-                <odoo.controls.OField
-                    android:id="@+id/LocationPicking"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:fieldLabelColor="@color/theme_secondary"
-                    app:fieldName="location_id"
-                    app:fieldTextAppearance="?android:textAppearanceMedium" />
-
-                <odoo.controls.OField
-                    android:id="@+id/LocationDestPicking"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:fieldLabelColor="@color/theme_secondary"
-                    app:fieldName="location_dest_id"
-                    app:fieldTextAppearance="?android:textAppearanceMedium" />
-
-                <odoo.controls.OField
-                    android:id="@+id/StatePicking"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:defaultFieldValue="request"
-                    app:fieldLabelColor="@color/theme_secondary"
-                    app:fieldName="state"
-                    app:fieldTextAppearance="?android:textAppearanceMedium" />
-
-            </LinearLayout>
-
-            <View
-                style="@style/ViewSeparator"
-                android:layout_marginLeft="72dp" />
-
-            <LinearLayout
-                android:id="@+id/layoutAddItem"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="?android:attr/selectableItemBackground"
                 android:orientation="vertical"
-                android:paddingBottom="@dimen/default_8dp"
-                android:paddingLeft="@dimen/default_16dp"
-                android:paddingRight="@dimen/default_16dp"
-                android:paddingTop="@dimen/default_8dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:padding="2dp"
-                        android:src="@drawable/ic_action_edit"
-                        android:tint="@color/android_orange_dark" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center_vertical"
-                        android:text="Manage Product lines"
-                        android:textAllCaps="true"
-                        android:textAppearance="?android:textAppearanceSmall"
-                        android:textColor="@color/android_orange_dark"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                app:controlIconTint="@color/body_text_3"
+                app:modelName="stock.picking">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <Button
-                        android:id="@+id/btnDoNewTransfer"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Батлах"
-                        android:visibility="gone" />
-
-                    <EditText
-                        android:id="@+id/scanCode"
+                    <odoo.controls.OField
+                        android:id="@+id/NamePicking"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:visibility="gone" />
+                        app:defaultFieldValue="-"
+                        app:fieldName="name"
+                        app:fieldTextAppearance="?android:textAppearanceLarge" />
+
+                    <odoo.controls.OField
+                        android:id="@+id/OriginPicking"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:defaultFieldValue="-"
+                        app:fieldName="origin"
+                        app:fieldTextAppearance="?android:textAppearanceLarge" />
+
+                    <odoo.controls.OField
+                        android:id="@+id/MinDatePicking"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:fieldLabelColor="@color/theme_secondary"
+                        app:fieldName="min_date"
+                        app:fieldTextAppearance="?android:textAppearanceSmall" />
+
+                    <odoo.controls.OField
+                        android:id="@+id/PartnerPicking"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:fieldLabelColor="@color/theme_secondary"
+                        app:fieldName="partner_id"
+                        app:fieldTextAppearance="?android:textAppearanceSmall"
+                        app:widgetType="SearchableLive" />
+
+                    <odoo.controls.OField
+                        android:id="@+id/LocationPicking"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:fieldLabelColor="@color/theme_secondary"
+                        app:fieldName="location_id"
+                        app:fieldTextAppearance="?android:textAppearanceMedium" />
+
+                    <odoo.controls.OField
+                        android:id="@+id/LocationDestPicking"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:fieldLabelColor="@color/theme_secondary"
+                        app:fieldName="location_dest_id"
+                        app:fieldTextAppearance="?android:textAppearanceMedium" />
+
+                    <odoo.controls.OField
+                        android:id="@+id/StatePicking"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:defaultFieldValue="request"
+                        app:fieldLabelColor="@color/theme_secondary"
+                        app:fieldName="state"
+                        app:fieldTextAppearance="?android:textAppearanceMedium" />
+
                 </LinearLayout>
 
-            </LinearLayout>
+                <View
+                    style="@style/ViewSeparator"
+                    android:layout_marginLeft="72dp" />
 
-            <odoo.controls.ExpandableListControl
-                android:id="@+id/ExpandListProductLine"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/default_8dp"
-                android:layout_marginTop="@dimen/default_8dp"
-                android:orientation="vertical"
-                android:visibility="gone">
+                <LinearLayout
+                    android:id="@+id/layoutAddItem"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:orientation="vertical"
+                    android:paddingBottom="@dimen/default_8dp"
+                    android:paddingLeft="@dimen/default_16dp"
+                    android:paddingRight="@dimen/default_16dp"
+                    android:paddingTop="@dimen/default_8dp"
+                    android:visibility="gone">
 
-            </odoo.controls.ExpandableListControl>
-        </odoo.controls.OForm>
-    </ScrollView>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:text="Бар код уншуулах"
+                            android:textAllCaps="true"
+                            android:textAppearance="?android:textAppearanceSmall"
+                            android:textColor="@color/android_orange_dark"
+                            android:textStyle="bold" />
+
+                        <EditText
+                            android:id="@+id/scanCode"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <odoo.controls.ExpandableListControl
+                    android:id="@+id/ExpandListProductLine"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/default_8dp"
+                    android:layout_marginTop="@dimen/default_8dp"
+                    android:orientation="vertical">
+
+                </odoo.controls.ExpandableListControl>
+            </odoo.controls.OForm>
+        </ScrollView>
+    </android.support.v4.widget.SwipeRefreshLayout>
 </LinearLayout>

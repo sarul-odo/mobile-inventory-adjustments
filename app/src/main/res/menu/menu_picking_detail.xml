@@ -7,16 +7,20 @@
         android:title="@string/label_edit"
         app:showAsAction="always" />
     <item
+        android:id="@+id/menu_picking_confirm"
+        android:title="@string/label_confirm"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/menu_packeg_sync"
         android:icon="@drawable/sync"
         android:title="@string/label_edit"
         app:showAsAction="always" />
     <item
         android:id="@+id/menu_picking_save"
-        android:title="@string/label_save"
+        android:title="@string/label_save_mn"
         app:showAsAction="always" />
     <item
         android:id="@+id/menu_picking_cancel"
-        android:title="@string/label_cancel"
+        android:title="@string/label_cancel_mn"
         app:showAsAction="always" />
 </menu>

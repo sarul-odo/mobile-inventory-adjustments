@@ -30,7 +30,9 @@ import com.odoo.core.orm.fields.types.OFloat;
 import com.odoo.core.orm.fields.types.OInteger;
 import com.odoo.core.orm.fields.types.OSelection;
 import com.odoo.core.orm.fields.types.OVarchar;
+import com.odoo.core.rpc.helper.ODomain;
 import com.odoo.core.support.OUser;
+import com.odoo.core.utils.ODateUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,5 +66,15 @@ public class PickingType extends OModel {
             e.printStackTrace();
         }
         return "";
+    }
+
+    @Override
+    public ODomain defaultDomain() {
+        ODomain domain = new ODomain();
+        List<String> lidtDomain = new ArrayList<>();
+        lidtDomain.add("incoming");
+        lidtDomain.add("outgoing");
+        domain.add("code", "in", lidtDomain);
+        return domain;
     }
 }

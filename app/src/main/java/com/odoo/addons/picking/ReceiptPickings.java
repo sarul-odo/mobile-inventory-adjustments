@@ -2,6 +2,7 @@ package com.odoo.addons.picking;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentManager;
@@ -24,7 +25,9 @@ import android.widget.Toolbar;
 
 import com.odoo.R;
 import com.odoo.addons.stock.Models.Picking;
+import com.odoo.addons.stock.Models.PickingType;
 import com.odoo.core.orm.ODataRow;
+import com.odoo.core.rpc.helper.ODomain;
 import com.odoo.core.support.addons.fragment.BaseFragment;
 import com.odoo.core.support.addons.fragment.IOnSearchViewChangeListener;
 import com.odoo.core.support.addons.fragment.ISyncStatusObserverListener;
@@ -33,6 +36,8 @@ import com.odoo.core.support.list.OCursorListAdapter;
 import com.odoo.core.utils.IntentUtils;
 import com.odoo.core.utils.OControls;
 import com.odoo.core.utils.OCursorUtils;
+import com.odoo.core.utils.ODateUtils;
+import com.odoo.core.utils.OPreferenceManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +57,7 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
     private OCursorListAdapter mAdapter = null;
     private boolean syncRequested = false;
     private Context mContext;
+    private Picking picking;
     private Toolbar toolbar;
     public FragmentManager manager;
 
@@ -77,6 +83,7 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         setHasSwipeRefreshView(view, R.id.swipe_container_picking, this);
         mView = view;
         mContext = this.getContext();
+        picking = new Picking(mContext, null);
         ListView mListViewPicking = (ListView) view.findViewById(R.id.lw_picking);
         mAdapter = new OCursorListAdapter(getActivity(), null, R.layout.picking_row_item);
         mAdapter.setOnViewBindListener(this);
@@ -186,6 +193,22 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         }
     }
 
+    private class StockPickingSync extends AsyncTask<ODomain, Void, Void> {
+        @Override
+        protected Void doInBackground(ODomain... oDomains) {
+            ODomain domain = oDomains[0];
+            picking.quickSyncRecords(domain);
+            picking.sync().requestSync(Picking.AUTHORITY);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            setSwipeRefreshing(false);
+        }
+    }
+
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mAdapter.changeCursor(null);
@@ -241,7 +264,6 @@ public class ReceiptPickings extends BaseFragment implements LoaderManager.Loade
         }
         return super.onOptionsItemSelected(item);
     }
-
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {

@@ -21,6 +21,7 @@
     <string name="toast_record_deleted">Record deleted</string>
     <string name="toast_check_internet_connection">Интернет холболтоо шалгана уу !</string>
     <string name="close_activity">Анхааруулга, бичлэг засварлагдсан байгаа ч өөрчлөлтүүд хэрэгсэгдэхгүй.</string>
+    <string name="backorder_confirm">Дутагдлын захиалга үүсгэх, хэрэв үлдсэн бараануудыг дараа боловсруулахаар бол. Хэрэв үлдсэн барааг хангахгүй бол дутагдлын захиалгыг үүсгэх хэрэггүй.</string>
     <string name="pack_operation_sync">Барааны мэдээлэл шинэчилж байна!</string>
     <string name="picking_transfer">Түр хүлээнэ үү!</string>
 </resources>

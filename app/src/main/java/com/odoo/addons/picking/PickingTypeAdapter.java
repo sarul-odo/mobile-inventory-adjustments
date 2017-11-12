@@ -66,7 +66,7 @@ public class PickingTypeAdapter extends CursorRecyclerViewAdapter<PickingTypeAda
             @Override
             public void onClick(View v) {
 //                context.setTitle("Pickings");
-                ReceiptPickings pickings = new ReceiptPickings(pickingType,manager);
+                ReceiptPickings pickings = new ReceiptPickings(pickingType, manager);
                 FragmentManager fragmentManager = manager;
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 fragmentTransaction.replace(R.id.fragment_container, pickings);

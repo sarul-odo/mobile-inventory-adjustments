@@ -20,6 +20,7 @@
 package com.odoo.addons.stock.Models;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.odoo.BuildConfig;
 import com.odoo.base.addons.res.ResPartner;

@@ -48,6 +48,8 @@ public class PackOperation extends OModel {
     OColumn ordered_qty = new OColumn("Ordered Quantity", OFloat.class);
     OColumn product_qty = new OColumn("To Do", OFloat.class).setDefaultValue(0.0).setRequired();
     OColumn qty_done = new OColumn("Done", OFloat.class).setDefaultValue(0.0);
+    OColumn pack_lot_ids = new OColumn("Lot", PackOperationLot.class, OColumn.RelationType.OneToMany).setRelatedColumn("operation_id");
+
     @Odoo.Functional(method = "storeProductName", store = true, depends = {"product_id"})
     OColumn product_name = new OColumn("Product name", OVarchar.class).setLocalColumn();
 
@@ -79,7 +81,7 @@ public class PackOperation extends OModel {
             if (!values.getString("product_id").equals("false")) {
                 List<Object> product = (ArrayList<Object>) values.get("product_id");
                 productProduct = new ProductProduct(context, null);
-                ODataRow productRow = productProduct.select(null, "id = ?", new String[]{product.get(0).toString()}).get(0);
+                ODataRow productRow = productProduct.select(new String[]{"barcode"}, "id = ?", new String[]{product.get(0).toString()}).get(0);
                 if (productRow.size() > 0) {
                     return productRow.getString("barcode");
                 }
